@@ -1,0 +1,149 @@
+{% extends '_layouts/base.html' %}
+{% load staticfiles djangular_tags %}
+
+{% block page_title %}TweetCoder{% endblock %}
+
+{% block meta %}
+<meta name="twitter:widgets:csp" content="on">
+{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'theme.less' %}" type="text/less">
+<link rel="stylesheet" href="{% static 'style.less' %}" type="text/less">
+<link rel="stylesheet" href="{% static 'bower/c3/c3.css' %}">
+<link rel="stylesheet" href="{% static 'tweet_coder.less' %}" type="text/less">
+
+{% endblock %}
+
+{% block js %}
+{{ block.super }}
+
+<script src="{% static 'bower/angular/angular.js' %}"></script>
+<script src="{% static 'bower/angular-cookies/angular-cookies.js' %}"></script>
+<script src="{% static 'bower/angular-route/angular-route.js' %}"></script>
+<script src="{% static 'bower/angular-resource/angular-resource.js' %}"></script>
+<script src="{% static 'bower/angular-animate/angular-animate.js' %}"></script>
+<script src="{% static 'bower/angular-sanitize/angular-sanitize.js' %}"></script>
+<script src="{% static 'bower/angucomplete-alt/angucomplete-alt.js' %}"></script>
+<script src="{% static 'bower/angular-smart-table/dist/smart-table.js' %}"></script>
+
+<script src="{% static 'bower/jquery-ui/ui/core.js' %}"></script>
+<script src="{% static 'bower/jquery-ui/ui/widget.js' %}"></script>
+<script src="{% static 'bower/jquery-ui/ui/mouse.js' %}"></script>
+<script src="{% static 'bower/jquery-ui/ui/draggable.js' %}"></script>
+<script src="{% static 'bower/jquery-ui/ui/droppable.js' %}"></script>
+<script src="{% static 'bower/angular-dragdrop/src/angular-dragdrop.js' %}"></script>
+
+<script src="{% static 'djangular/js/django-angular.js' %}"></script>
+
+<script src="{% static 'bower/spin.js/spin.js' %}"></script>
+<script src="{% static 'bower/angular-spinner/angular-spinner.js' %}"></script>
+    
+<script src="{% static 'bower/moment/moment.js' %}"></script>
+<script src="{% static 'bower/d3/d3.js' %}"></script>
+<script src="{% static 'bower/c3/c3.js' %}"></script>
+
+<script src="{% static 'tweet_coder/app.js' %}"></script>
+<script src="{% static 'tweet_coder/services.js' %}"></script>
+<script src="{% static 'tweet_coder/controllers.js' %}"></script>
+
+
+{% endblock %}
+
+{% block navigation_bar %}
+{% endblock %}
+
+{% block bootstrapping %}
+{{ block.super }}
+<script>
+    angular.module('ng.django.urls')
+        .constant('patterns', {% load_djng_urls %});
+
+    angular.module('TweetCoder.bootstrap')
+        .constant('TweetCoder.bootstrap.dictionary', {{ object.pk }});
+</script>
+
+{% endblock %}
+
+{% block content %}
+
+<div ng-app="TweetCoder" id="application" class="container-fluid"  ng-controller="TweetCoder.controllers.DictionaryController">
+        <div id="titleWrap" class="row clearfix"  ng-cloak="">
+
+             <div class="logo-titles">
+                 <span class="title">Tweet Coder</span>
+                 <span class="description">Basic tweet labeling interface</span>
+                 <span class="dataset">{$ Dictionary.dataset.description $} ({$ Dictionary.dataset.message_count $} messages)</span>
+             </div>
+
+        </div>
+        <div id="content" class="ng-cloak" ng-cloak  ng-controller="TweetCoder.controllers.ViewController" >
+            <div class="wrap">
+                <div class="box">
+                    <span us-spinner="spinnerOptions" spinner-key="label-spinner"></span>
+                    <div class="box-header">new label</div>
+                    <div class="tweet-main">{$ currentMessage $}</div>
+                    <div class="btn-group-code" data-toggle="buttons">
+                        <label class="btn btn-default" ng-repeat="code in codes"
+                                   ng-click="selectLabel(code.text)"
+                                   ng-class="{'active': code.text == currentLabel}">
+                            <input type="radio" ng-attr-id="{$ 'code-' + code.index $}"
+                                   name="code.text" value="code.index"/> {$ code.text $}
+                        </label>
+                    </div>
+                    <div class="form-inline">
+                        <div class="checkbox">
+                            <label><input type="checkbox" ng-model="isCurrentMessageAmbiguous"> ambiguous</label>
+                        </div>
+                        <button class="btn btn-default" ng-disabled="!currentLabel" ng-click="submitLabel()">Submit Code</button>
+                    </div>
+                </div>
+                <div class="box">
+                    <div class="box-header">submitted labels</div>
+                    <span us-spinner="spinnerOptions" spinner-key="table-spinner"></span>
+                    <table st-table="displayedLabels" st-safe-src="submittedLabels" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th st-sort="text">Text</th>
+                                <th ng-attr-st-sort="{$ code.text $}" ng-repeat="code in codes">
+                                    {$ code.text $}
+                                </th>
+                                <th st-sort="ambiguous">Ambiguous</th>
+                            </tr>
+                            <tr>
+                                <th>
+                                    <input st-search="text" placeholder="search for text" class="input-sm form-control" type="search"/>
+                                </th>
+                                <th ng-repeat="code in codes">
+                                    <input ng-attr-st-search="{$ code.text $}"
+                                           ng-attr-placeholder="{$ code.text $}"
+                                           class="input-sm form-control" type="search"/>
+                                </th>
+                                <th>
+                                    <select st-search="ambiguous" placeholder="search for ambiguous" class="input-sm form-control"
+                                           type="search">
+                                        <option value="">All</option>
+                                        <option value="true">true</option>
+                                        <option value="false">false</option>
+                                    </select>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="label in displayedLabels">
+                                <td>{$ label.text $}</td>
+                                <td ng-repeat="code in codes">
+                                    {$ label[code.text] $}
+                                </td>
+                                <td>{$ label.ambiguous $}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+</div>
+
+{% endblock %}
+{% block footer %}
+{% endblock %}

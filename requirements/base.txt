@@ -1,0 +1,42 @@
+# Fabric
+Fabric
+
+# Django stuff
+Django==1.7.5
+
+# Database Adapter
+MySQL-python==1.2.5
+
+# Cache adapter
+python-memcached
+django-cache-machine
+
+# Templates
+django-compressor==1.4
+
+# Admin
+django-debug-toolbar
+django-docs
+
+# utils
+path.py
+django-extensions
+dj-database-url
+django-widget-tweaks
+-e git+https://github.com/michaelbrooks/django-twitter-stream.git#egg=django-twitter-stream
+
+# rest api
+djangorestframework==3.0.5
+markdown
+django-filter
+docutils
+
+# angular
+django-angular==0.7.10
+
+# TextBlob
+textblob
+
+
+# Twitter API Auth
+oauth2

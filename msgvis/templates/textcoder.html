@@ -1,0 +1,166 @@
+{% extends '_layouts/base.html' %}
+{% load staticfiles djangular_tags %}
+
+{% block page_title %}TextCoder{% endblock %}
+
+{% block meta %}
+<meta name="twitter:widgets:csp" content="on">
+{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'theme.less' %}" type="text/less">
+<link rel="stylesheet" href="{% static 'style.less' %}" type="text/less">
+<link rel="stylesheet" href="{% static 'bower/c3/c3.css' %}">
+<link rel="stylesheet" href="{% static 'text_coder.less' %}" type="text/less">
+
+{% endblock %}
+
+{% block js %}
+{{ block.super }}
+
+<script src="{% static 'bower/angular/angular.js' %}"></script>
+<script src="{% static 'bower/angular-cookies/angular-cookies.js' %}"></script>
+<script src="{% static 'bower/angular-route/angular-route.js' %}"></script>
+<script src="{% static 'bower/angular-resource/angular-resource.js' %}"></script>
+<script src="{% static 'bower/angular-animate/angular-animate.js' %}"></script>
+<script src="{% static 'bower/angular-sanitize/angular-sanitize.js' %}"></script>
+<script src="{% static 'bower/angucomplete-alt/angucomplete-alt.js' %}"></script>
+<script src="{% static 'bower/angular-smart-table/dist/smart-table.js' %}"></script>
+
+<script src="{% static 'bower/jquery-ui/ui/core.js' %}"></script>
+<script src="{% static 'bower/jquery-ui/ui/widget.js' %}"></script>
+<script src="{% static 'bower/jquery-ui/ui/mouse.js' %}"></script>
+<script src="{% static 'bower/jquery-ui/ui/draggable.js' %}"></script>
+<script src="{% static 'bower/jquery-ui/ui/droppable.js' %}"></script>
+<script src="{% static 'bower/angular-dragdrop/src/angular-dragdrop.js' %}"></script>
+
+<script src="{% static 'djangular/js/django-angular.js' %}"></script>
+
+<script src="{% static 'bower/spin.js/spin.js' %}"></script>
+<script src="{% static 'bower/angular-spinner/angular-spinner.js' %}"></script>
+    
+<script src="{% static 'bower/moment/moment.js' %}"></script>
+<script src="{% static 'bower/d3/d3.js' %}"></script>
+<script src="{% static 'bower/c3/c3.js' %}"></script>
+
+<script src="{% static 'text_coder/app.js' %}"></script>
+<script src="{% static 'text_coder/services.js' %}"></script>
+<script src="{% static 'text_coder/controllers.js' %}"></script>
+<script src="{% static 'text_coder/charts.js' %}"></script>
+
+
+{% endblock %}
+
+{% block navigation_bar %}
+{% endblock %}
+
+{% block bootstrapping %}
+{{ block.super }}
+<script>
+    angular.module('ng.django.urls')
+        .constant('patterns', {% load_djng_urls %});
+
+    angular.module('TextCoder.bootstrap')
+        .constant('TextCoder.bootstrap.dictionary', {{ object.pk }});
+</script>
+
+{% endblock %}
+
+{% block content %}
+
+<div ng-app="TextCoder" id="application" class="container-fluid"  ng-controller="TextCoder.controllers.DictionaryController">
+        <div id="titleWrap" class="row clearfix"  ng-cloak="">
+
+             <div class="logo-titles">
+                 <span class="title">SVM Result Browser</span>
+                 <span class="description"> A simple view to see svm results</span>
+                 <span class="dataset">{$ Dictionary.dataset.description $} ({$ Dictionary.dataset.message_count $} messages)</span>
+             </div>
+
+        </div>
+        <div id="content" class="ng-cloak" ng-cloak  ng-controller="TextCoder.controllers.ViewController" >
+            <div class="col-md-8 wrap">
+                <span us-spinner="spinnerOptions" spinner-key="table-spinner"></span>
+                <table st-table="features" st-safe-src="svm_results.features" class="table table-striped">
+                    <thead>
+                        <tr>
+                            <td class='dist-title' colspan="3">Training code distribution</td>
+                            <td class="bar-td" ng-repeat="code in svm_results.codes">
+                                <div>{$ code.train_count $}</div>
+                                <div ng-style=dist(code) class="bar"></div>
+                            </td>
+                            <td></td>
+                            <td ng-if="vector"></td>
+                            <td ng-if="vector"></td>
+                        </tr>
+                        <tr>
+                            <th st-sort="feature_index">feature_index</th>
+                            <th st-sort="feature">feature</th>
+                            <th st-sort="count">count</th>
+                            <th st-sort="codes.{$ code.text $}.order" ng-repeat="code in svm_results.codes">
+                                {$ code.text $}
+                            </th>
+                            <th st-sort="in_top_features" st-sort-default="reverse"># in top</th>
+                            <td ng-show="vector"></td>
+                            <th st-sort="getter.vector" ng-if="vector" st-sort-default="reverse"> {$ 'Tweet ' + vector.message.id $}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="feature in features">
+                            <th>{$ feature.feature_index $}</th>
+                            <th>{$ feature.feature $}</th>
+                            <th>{$ feature.count $}</th>
+                            <td ng-style="style(feature.codes[code.text],code.index)" ng-repeat="code in svm_results.codes">
+                                {$ feature.codes[code.text].weight | number: 2 $}
+                            </td>
+                            <td>{$ feature.in_top_features $}</td>
+                            <td></td>
+                            <td ng-if="vector" ng-style="on_off(vector.feature_vector[feature.feature_index])">
+                                {$ vector.feature_vector[feature.feature_index] $}
+                            </td>
+
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-md-4">
+                <span us-spinner="spinnerOptions" spinner-key="vector-spinner"></span>
+                <div class="box" >
+                    <h4>Meta</h4>
+                    <div class="dictionary"><strong>Dictionary {$ Dictionary.id $}</strong>: {$ Dictionary.feature_count $} features</div>
+                    <div class="accuracy"><strong>Training Accuracy</strong>: {$ svm_results.accuracy.training * 100 | number: 2 $}% </div>
+                    <div class="accuracy"><strong>Testing Accuracy</strong>: {$ svm_results.accuracy.testing * 100 | number: 2 $}% </div>
+                </div>
+
+                <div class="box" id="testing_points">
+                    <h4>Tweet List</h4>
+                    <div ng-class="active(tid)" ng-repeat="tid in svm_results.test_id" ng-click="load_vector(tid)" class="tweet-point"> {$ tid $} </div>
+                </div>
+
+                <div class="box" ng-show="vector">
+                    <h4>Current Tweet {$ vector.message.id $}</h4>
+                    <div class="tweet-selectable"><span ng-repeat="char in vector.message.characters track by $index" class="ng-class:'char-'+$index;"
+                               ng-mouseenter="onCharMouseEnter($index)"
+                               ng-mouseleave="onCharMouseLeave($index)"
+                               ng-mousedown="onCharMouseDown($index, $event)"
+                               ng-mouseup="onCharMouseUp($index, $event)"
+                               ng-style="charStyle($index)">{$char$}</span></div>
+
+                    <button class="btn btn-default" ng-show="selectedTokens" ng-click="addFeature(selectedTokens)">Add Feature</button>
+                </div>
+
+                <div class="box">
+                    <h4>User-defined Features</h4>
+                    <div ng-repeat="(key, feature) in featureList track by key" class="user-feature">
+                        <span>{$ feature.tokens.join(" ") $}</span>
+                        <button class="btn btn-default" ng-click="removeFeature(feature)">Remove</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+</div>
+
+{% endblock %}
+{% block footer %}
+{% endblock %}

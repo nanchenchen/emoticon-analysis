@@ -1,0 +1,107 @@
+@import 'bower/components-bootstrap/less/mixins';
+
+/* Full page application */
+// http://blog.stevensanderson.com/2011/10/05/full-height-app-layouts-a-css-trick-to-make-it-easier/
+
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    min-width: 1200px;
+}
+body {
+    font-family: 'Open Sans', "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: 400;
+    font-size: 9pt;
+    background-color: rgb(230, 230, 230);
+    min-width: 1200px;
+}
+th:hover{
+    cursor: pointer;
+}
+#main,#application{
+    height: 100%;
+}
+
+#titleWrap {
+    padding: 10px;
+    background-color: white;
+    -webkit-box-shadow: 0 1px 1px 1px rgba(0,0,0,.1);
+    -moz-box-shadow: 0 1px 1px 1px rgba(0,0,0,.1);
+    box-shadow: 0 1px 1px 1px rgba(0,0,0,.1);
+
+    .title {
+        font-size: 2em;
+        font-weight: 700;
+    }
+
+    .logo{
+        width: 36px;
+        height: 36px;
+        margin: 8px;
+    }
+
+    .description {
+        font-size: 1.6em;
+        margin-left: 10px;
+        margin-right: 20px;
+    }
+
+    .dataset {
+        padding-left: 20px;
+        font-size: 1.6em;
+        position: fixed;
+        top: 15px;
+        right: 10px;
+
+    }
+}
+#content {
+    margin: 10px;
+    height: ~'calc(100% - 75px)';
+}
+.wrap {
+    overflow-y: auto;
+    height: 100%;
+}
+.box {
+    margin: 10px 0;
+    padding: 15px;
+    -webkit-box-shadow: 0 1px 1px 1px rgba(0,0,0,.1);
+    -moz-box-shadow: 0 1px 1px 1px rgba(0,0,0,.1);
+    box-shadow: 0 1px 1px 1px rgba(0,0,0,.1);
+    border-radius: 0;
+    -moz-border-radius: 0;
+    -webkit-border-radius: 0;
+    border: 0px solid #e3e3e3;
+    background-color: white;
+}
+.box-header {
+    text-transform: uppercase;
+    font-weight: 700;
+}
+.tweet-main {
+    font-size: 2em;
+    font-weight: 300;
+    margin: 10px 0;
+}
+.btn {
+    border-radius: 0;
+}
+.btn-group-code{
+    margin: 10px 0;
+}
+.btn-group-code > .btn {
+    margin-right: 15px;
+    width: 100px;
+}
+.btn-group-code > .btn.active {
+    color: white;
+    font-weight:600;
+    background: #333;
+    border-color: #333;
+}
+.active {
+    background-color: #fee0d2;
+}

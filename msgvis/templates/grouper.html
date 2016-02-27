@@ -1,0 +1,611 @@
+{% extends '_layouts/base.html' %}
+{% load staticfiles djangular_tags %}
+
+{% block page_title %}Lariat - Visual Analytics for Exploring Social Media Data{% endblock %}
+
+{% block meta %}
+<meta name="twitter:widgets:csp" content="on">
+{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'theme.less' %}" type="text/less">
+<link rel="stylesheet" href="{% static 'style.less' %}" type="text/less">
+<link rel="stylesheet" href="{% static 'bower/c3/c3.css' %}">
+<link rel="stylesheet" href="{% static 'grouper.less' %}" type="text/less">
+<link rel="stylesheet" href="{% static 'bower/angucomplete-alt/angucomplete-alt.css' %}">
+{% endblock %}
+
+{% block js %}
+{{ block.super }}
+
+<script src="{% static 'bower/angular/angular.js' %}"></script>
+<script src="{% static 'bower/angular-cookies/angular-cookies.js' %}"></script>
+<script src="{% static 'bower/angular-route/angular-route.js' %}"></script>
+<script src="{% static 'bower/angular-resource/angular-resource.js' %}"></script>
+<script src="{% static 'bower/angular-animate/angular-animate.js' %}"></script>
+<script src="{% static 'bower/angular-sanitize/angular-sanitize.js' %}"></script>
+<script src="{% static 'bower/angucomplete-alt/angucomplete-alt.js' %}"></script>
+
+<script src="{% static 'bower/jquery-ui/ui/core.js' %}"></script>
+<script src="{% static 'bower/jquery-ui/ui/widget.js' %}"></script>
+<script src="{% static 'bower/jquery-ui/ui/mouse.js' %}"></script>
+<script src="{% static 'bower/jquery-ui/ui/draggable.js' %}"></script>
+<script src="{% static 'bower/jquery-ui/ui/droppable.js' %}"></script>
+<script src="{% static 'bower/angular-dragdrop/src/angular-dragdrop.js' %}"></script>
+
+<script src="{% static 'djangular/js/django-angular.js' %}"></script>
+
+<script src="{% static 'bower/spin.js/spin.js' %}"></script>
+<script src="{% static 'bower/angular-spinner/angular-spinner.js' %}"></script>
+    
+<script src="{% static 'bower/moment/moment.js' %}"></script>
+<script src="{% static 'bower/d3/d3.js' %}"></script>
+<script src="{% static 'bower/c3/c3.js' %}"></script>
+
+<script src="{% static 'SparQs/SparQs.js' %}"></script>
+<script src="{% static 'SparQs/controllers.js' %}"></script>
+<script src="{% static 'SparQs/services.js' %}"></script>
+<script src="{% static 'SparQs/services/dimensions_service.js' %}"></script>
+<script src="{% static 'SparQs/services/questions_service.js' %}"></script>
+<script src="{% static 'SparQs/charts.js' %}"></script>
+
+{% endblock %}
+
+{% block navigation_bar %}
+{% endblock %}
+
+{% block bootstrapping %}
+{{ block.super }}
+<script>
+    angular.module('ng.django.urls')
+        .constant('patterns', {% load_djng_urls %});
+
+    angular.module('SparQs.bootstrap')
+        .constant('SparQs.bootstrap.dataset', {{ object.pk }});
+</script>
+
+{% endblock %}
+
+{% block content %}
+<div ng-app="SparQs" id="application" class="container-fluid" ng-controller="SparQs.controllers.DatasetController">
+         <div id="titleWrap" class="row clearfix">
+
+             <div class="logo-titles">
+                 <span class="title"><img class="logo" ng-src="{% static 'images/Lariat.png' %}" />Lariat</span>
+                 <span class="description"> Visual Analytics for Exploring Social Media Data</span>
+                 <span class="dataset">{$ Dataset.description $} ({$ Dataset.message_count $} tweets)</span>
+             </div>
+
+        </div>
+        <div id="content" class="row ng-cloak" ng-cloak  ng-controller="SparQs.controllers.SearchAndGroupController">
+            <div id="top" class="row">
+                <div id="group-edit" class="col-md-3">
+                    <div class="box edit-box">
+                        <form class="form">
+                            {% csrf_token %}
+                            <div class="heading">
+                                <span class="group-color-box"
+                                     ng-click="toggle_group($event)" ng-style="group_color()">
+                                </span>
+                                Search Tweets by Keywords</div>
+                            <span class="search-instructions">Use NOT as prefix for excluding a keyword (e.g., NOT job).</span>
+                            <div class="search-keywords form-control">
+                                <div class="btns">
+                                    <span class="glyphicon glyphicon-search" ng-click="search($event, true)"></span>
+                                    <span class="glyphicon glyphicon-remove" ng-show="search_params.selected_keyword_items.length" ng-click="reset_search()"></span>
+                                </div>
+                                 <div class="selected-keyword-items">
+                                     <div class="selected-keyword-item" ng-repeat="item in search_params.selected_keyword_items">
+                                         <!--<span class="text"> {$ item $}</span>-->
+                                         <input class='text' type="text" ng-model="item.text"
+                                                 ng-keypress="record_changes_of_old_keywords(item)"
+                                                 ng-style="calc_input_width(item.text)"/>
+                                         <span class="glyphicon glyphicon-remove" ng-click="remove_selected(item)"></span>
+                                     </div>
+                                 </div>
+                                 <angucomplete-alt
+                                      id="keyword_autocomplete"
+                                      placeholder="Enter keywords"
+                                      pause="400"
+                                      selected-object="select_keywords"
+                                      remote-url="{$ keyword_list_url $}"
+                                      remote-url-data-field="keywords"
+                                      title-field="text"
+                                      minlength="1"
+                                      clear-selected="true"
+                                      input-class="input-box"
+                                      input-changed="input_changed"
+                                      enter-key-down="press_enter_key"
+                                      backspace-key-down="delete_previous_item"
+                                      input-style="calc_input_width"   />
+
+
+                            </div>
+                        </form>
+                        <div class="tweet-type-options">
+                            <strong>Search in:</strong>
+                            <label>
+                                <input type="checkbox" ng-model="search_params.tweet_types.tweet"
+                                       ng-change="record_change('tweet', search_params.tweet_types.tweet)"> original tweets
+                            </label>
+                            <label>
+                                <input type="checkbox" ng-model="search_params.tweet_types.retweet"
+                                       ng-change="record_change('retweet', search_params.tweet_types.retweet)"> retweets
+                            </label>
+                            <label>
+                                <input type="checkbox" ng-model="search_params.tweet_types.reply"
+                                       ng-change="record_change('reply', search_params.tweet_types.reply)"> replies
+                            </label>
+                        </div>
+
+
+                        <div class="mask" ng-show="edit_mode"></div>
+
+                    </div>
+                    <button class="btn btn-default btn-save" ng-click="save($event, false)">
+                        <span class="glyphicon glyphicon-heart"></span> Save
+                    </button>
+                    <span us-spinner="spinnerOptions" spinner-key="save-spinner"></span>
+                </div>
+                <div id="groups" class="col-md-9">
+                    <div id="group-wrapper">
+                        <div class="group-list-place-holder"
+                             ng-show="Group.group_list.length==0">
+                            <div class="prompt">Saved tweet groups will show up here.</div>
+
+                        </div>
+                        <div class="box group-box"
+                             ng-repeat="group in Group.group_list | orderBy:'id':true"
+                             ng-class="group_class(group)">
+
+
+                            <div class="group-wrap" id="group_{$ group.id $}">
+                                <div class="group-content" ng-hide="is_being_editing(group)"
+                                     ng-click="toggle_group($event, group)" >
+                                    <div class="heading">
+                                        <span class="group-color-box"
+                                             ng-click="toggle_group($event, group)" ng-style="group_color(group)">
+                                        </span>
+                                        #{$ group.order $} {$ group.name $}
+                                    </div>
+
+                                    <div class="keyword-list">
+                                        <strong>Keywords: </strong>{$ group.keywords.split(',').join(', ') $}
+                                    </div>
+                                    <div class="type-list">
+                                        <strong>Includes: </strong> {$ (group.include_types.length == 0 || group.include_types.length == 3) ? "all types" : group.include_types.join(', ') $}
+                                    </div>
+                                    <div class="bottom-bar">
+                                        <div class="count">
+                                            {$ group.message_count $} tweets
+                                        </div>
+                                        <div class="show-vis-btn"
+                                             ng-click="show_messages($event, group, true)">
+                                            show in search
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="edit-form" ng-show="is_being_editing(group)">
+                                    <form class="form">
+                                        {% csrf_token %}
+                                        <div class="heading">
+                                            <span class="group-color-box"
+                                                 ng-click="toggle_group($event, group)" ng-style="group_color(group)">
+                                            </span>
+                                            #{$ group.order $}
+                                            <input class="form-control heading-edit" id="group-name-field" type="text"
+                                                placeholder="Group Name" ng-model="edit_params.group_name" ng-enter="save($event, false, group)"
+                                            />
+                                        </div>
+
+                                        <div class="search-keywords form-control">
+                                            <div class="btns">
+                                                <span class="glyphicon glyphicon-search" ng-click="search($event, true)"></span>
+                                                <!--<button class="btn btn-primary" ng-click="save($event, group)">Save</button>-->
+                                            </div>
+                                             <div class="selected-keyword-items">
+                                                 <div class="selected-keyword-item" ng-repeat="item in edit_params.selected_keyword_items">
+                                                     <!--<span class="text"> {$ item $}</span>-->
+                                                     <input class='text' type="text" ng-model="item.text"
+                                                             ng-keypress="record_changes_of_old_keywords(item)"
+                                                             ng-style="calc_input_width(item.text)"/>
+                                                     <span class="glyphicon glyphicon-remove" ng-click="remove_selected(item)"></span>
+                                                 </div>
+                                             </div>
+                                             <angucomplete-alt
+                                                  placeholder="Enter keywords"
+                                                  pause="400"
+                                                  selected-object="select_keywords"
+                                                  remote-url="{$ keyword_list_url $}"
+                                                  remote-url-data-field="keywords"
+                                                  title-field="text"
+                                                  minlength="1"
+                                                  clear-selected="true"
+                                                  input-class="input-box"
+                                                  input-changed="input_changed"
+                                                  enter-key-down="press_enter_key"
+                                                  backspace-key-down="delete_previous_item"
+                                                  input-style="calc_input_width"
+                                                     />
+
+
+                                        </div>
+                                        <div class="tweet-type-options">
+                                            <strong>Search in:</strong>
+                                            <label>
+                                                <input type="checkbox" ng-model="edit_params.tweet_types.tweet"
+                                                       ng-change="record_change('tweet', edit_params.tweet_types.tweet)"> original tweets
+                                            </label>
+                                            <label>
+                                                <input type="checkbox" ng-model="edit_params.tweet_types.retweet"
+                                                       ng-change="record_change('retweet', edit_params.tweet_types.retweet)"> retweets
+                                            </label>
+                                            <label>
+                                                <input type="checkbox" ng-model="edit_params.tweet_types.reply"
+                                                       ng-change="record_change('reply', edit_params.tweet_types.reply)"> replies
+                                            </label>
+                                        </div>
+
+                                        <div class="close-btn" ng-show="is_being_editing(group)">
+                                            <span class="glyphicon glyphicon-ok" ng-click="save($event, false, group)" ></span>
+                                            <span class="glyphicon glyphicon-share-alt" ng-click="finish_edit($event, group, true)" ></span>
+                                        </div>
+
+                                    </form>
+                                    <span us-spinner="spinnerOptions" spinner-key="update-spinner"></span>
+
+                                </div>
+
+                            </div>
+                            <div class="icon" ng-hide="is_being_editing(group)">
+                                <span class="glyphicon glyphicon-pencil"
+                                     ng-click="edit_group($event, group)" ></span>
+                                <span class="glyphicon glyphicon-remove"
+                                     ng-click="delete_group($event, group)" ></span>
+                            </div>
+
+                            <!--<div class="mask" ng-show="show_mask(group)"></div>-->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="bottom" class="row">
+
+                <div id="left" class="col-md-3">
+                    <div id="search" class="box">
+                        <div id="search-tab">
+                            <span ng-class="tab_class('keyword_list')"
+                                  ng-click="change_mode('keyword_list', $event)">Keywords</span>
+                            <span ng-class="tab_class('group_messages')"
+                                  ng-click="change_mode('group_messages', $event)">Search Results</span>
+                            <span ng-class="tab_class('search_history')"
+                                  ng-click="change_mode('search_history', $event)">Search History</span>
+
+                        </div>
+
+                        <div ng-show="is_mode('keyword_list')">
+                            <div class="heading">Keyword List</div>
+                            Use these keywords to create groups.
+                            <div class="keyword-dist">
+
+                                <div id="keywords-list" class="keywords-list" when-scrolled="loadMoreKeywords()">
+                                    <keywords-histogram
+                                        keywords="Keywords" >
+                                    </keywords-histogram>
+                                </div>
+                                <span us-spinner="spinnerOptions" spinner-key="keywords-spinner"></span>
+                            </div>
+                        </div>
+                        <div ng-show="is_mode('group_messages')">
+                            <div class="heading" ng-show="!edit_mode">Search Results <span ng-hide="is_empty()">({$ Messages.count $})</span></div>
+                            <div ng-show="is_empty()" class="search-results-place-holder">
+                                Start from the search box above.
+                            </div>
+                            <div class="heading" ng-show="edit_mode">Tweets in Group [{$ Group.current_group_name() $}]<span ng-hide="is_empty()">({$ Messages.count $})</span></div>
+
+                            <div class="pages">
+                                <span ng-show="Messages.count>0">Pages:</span>
+                                <a ng-show="Messages.prev_page" ng-click="update_page(Messages.prev_page)"
+                                      class="page-link glyphicon glyphicon-chevron-left"> </a>
+                                <a ng-show="Messages.count>0"
+                                   ng-repeat="i in Messages.pages" ng-click="update_page(i)"
+                                   ng-class="highlight_current_page(i)" class="page-link"  > {$ i $} </a>
+                                <a ng-show="Messages.next_page" ng-click="update_page(Messages.next_page)"
+                                      class="page-link glyphicon glyphicon-chevron-right"> </a>
+                                <span ng-show="Messages.count==0">No search results.</span>
+                            </div>
+                            <div class="message-list heading-body">
+                                <div ng-repeat="message in Messages.list" class="tweet-wrapper">
+                                    <!--<script src='http://platform.twitter.com/widgets.js' charset='utf-8'></script>
+                                    <div ng-bind-html="message.embedded_html"></div>-->
+                                    <div class="media">
+                                        <img class="photo" ng-if="Dataset.has_prefetched_images && not_empty_url(message.media_url)"
+                                             ng-src="{% static 'media/photos/' %}{$ message.media_url $}" />
+                                        <img class="photo" ng-if="!Dataset.has_prefetched_images && not_empty_url(message.media_url)"
+                                             ng-src="{$ message.media_url $}" />
+                                    </div>
+
+                                    <div class="sender">
+                                        <a ng-href="https://twitter.com/{$ message.sender.username.trim() $}" target="_blank">
+                                            <img class="profile_img" ng-if="Dataset.has_prefetched_images && not_empty_url(message.sender.profile_image_processed_url)"
+                                                 ng-src="{% static 'media/profile_images/' %}{$ message.sender.profile_image_processed_url $}" />
+                                            <img class="profile_img" ng-if="!Dataset.has_prefetched_images && not_empty_url(message.sender.profile_image_processed_url)"
+                                                 ng-src="{$ message.sender.profile_image_processed_url $}" />
+                                            <div class="name">{$ message.sender.full_name.trim() $}</div>
+                                            <div class="username">@{$ message.sender.username.trim() $}</div>
+                                        </a>
+                                    </div>
+                                    <div class="text" ng-bind-html="message.embedded_html"></div>
+
+                                    <div class="meta">
+                                        <span class="meta-time" ng-bind="message.time | date : 'yyyy-MM-dd HH:mm:ss' : 'UTC'"></span>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <span us-spinner="spinnerOptions" spinner-key="search-spinner"></span>
+                        </div>
+                        <div id="history" ng-show="is_mode('search_history')">
+                            <div class="heading" ng-show="!edit_mode">Search History </div>
+                            <div ng-show="Group.search_records.length == 0" class="search-results-place-holder">
+                                Search history will be shown here.
+                            </div>
+                            <div class="message-list heading-body">
+                             <div class="record-box"
+                                  ng-repeat="record in Group.search_records | orderBy:'created_at':true"
+                                  ng-click="show_messages($event, record, true)">
+                                <div class="record created_at">{$ record.created_at | date : 'yyyy-MM-dd HH:mm:ss'$}</div>
+                                <div class="record keywords"><strong>Keywords</strong> {$ record.keywords $}</div>
+                                <div class="record include_types"><strong>Includes</strong> {$ record.include_types.join(", ") $}</div>
+                                <div class="record count">{$ record.message_count $} tweets</div>
+
+
+                             </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+                <div id="middle" class="col-md-9">
+                    <div id="middle-wrapper" class="box">
+                        <div id="viz-wrapper" class="col-md-8">
+                            <div class="col-md-9">
+                                <div id="viz" class="row app-panel" ng-controller="SparQs.controllers.VisualizationController">
+                                    <div class="heading">Visualization {$ title() $}
+                                        <div ng-show="Group.selected_groups.length > 0"
+                                         class="btn btn-default reset-selection-btn"
+                                         ng-click="reset_selection()"   >
+                                        Reset selection</div>
+                                    </div>
+
+                                    <div id="viz-content" class="heading-body">
+                                        <sparqs-vis vis-data-table="datatable"
+                                                        on-clicked="onVisClicked"
+                                                        group-colors="groupColors"
+
+                                                >
+                                            <span us-spinner="spinnerOptions" spinner-key="vis-spinner"></span>
+                                        </sparqs-vis>
+
+
+                                    </div>
+
+                                    <div class="filter-icon" ng-click="openFilter($event)" ng-show="show_filter()">Filter
+                                        <span class="glyphicon glyphicon-filter"></span>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                {% verbatim %}
+                                <div id="dimensions" class="app-panel row"
+                                     ng-controller="SparQs.controllers.DimensionController">
+                                    <div id="dimension-groups">
+                                        <div ng-repeat="group in dimension_groups"
+                                             class="dimension-group"
+                                             id="group-{$ group.group_name $}">
+                                            <div class="group-members">
+                                                <div ng-repeat="dimension in group.dimensions"
+                                                     class="dimension"
+                                                     ng-class="get_class(dimension)"
+                                                     ng-click="changeDimension(dimension)" >
+                                                    <span class="dimension-name" ng-bind="dimension.name" ></span>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endverbatim %}
+                            </div>
+                        </div>
+                        <div id="messages" class="col-md-4 app-panel" ng-controller="SparQs.controllers.ExampleMessageController">
+                            <div class="heading">Example Tweets</div>
+                            <div class="examples-description" ng-bind="convert_request_to_readable_str()"></div>
+                            <div class="pages" ng-hide="is_empty()">
+                                <span ng-show="Messages.count>0">Pages:</span>
+                                <a ng-show="Messages.prev_page" ng-click="update_page(Messages.prev_page)"
+                                      class="page-link glyphicon glyphicon-chevron-left"> </a>
+                                <a ng-show="Messages.count>0"
+                                   ng-repeat="i in Messages.pages" ng-click="update_page(i)"
+                                   ng-class="highlight_current_page(i)" class="page-link"  > {$ i $} </a>
+                                <a ng-show="Messages.next_page" ng-click="update_page(Messages.next_page)"
+                                      class="page-link glyphicon glyphicon-chevron-right"> </a>
+                                <span ng-show="Messages.count==0">No message in current selection.</span>
+                            </div>
+                            <div ng-show="is_empty()" class="search-results-place-holder">
+                                Click points in the visualization to get example tweets.
+                            </div>
+                            <span us-spinner="spinnerOptions" spinner-key="examples-spinner"></span>
+                            <div class="message-list heading-body">
+                                <div ng-repeat="message in Messages.list" class="tweet-wrapper">
+                                    <!--<script src='http://platform.twitter.com/widgets.js' charset='utf-8'></script>
+                                    <div ng-bind-html="message.embedded_html"></div>-->
+                                    <div class="media">
+                                        <img class="profile_img" ng-if="Dataset.has_prefetched_images && not_empty_url(message.media_url)"
+                                             ng-src="{% static 'media/photos/' %}{$ message.media_url $}" />
+                                        <img class="profile_img" ng-if="!Dataset.has_prefetched_images && not_empty_url(message.media_url)"
+                                             ng-src="{$ message.media_url $}" />
+                                    </div>
+
+                                    <div class="sender">
+                                        <img class="profile_img" ng-if="Dataset.has_prefetched_images && not_empty_url(message.sender.profile_image_processed_url)"
+                                             ng-src="{% static 'media/profile_images/' %}{$ message.sender.profile_image_processed_url $}" />
+                                        <img class="profile_img" ng-if="!Dataset.has_prefetched_images && not_empty_url(message.sender.profile_image_processed_url)"
+                                             ng-src="{$ message.sender.profile_image_processed_url $}" />
+                                        <div class="name">{$ message.sender.full_name.trim() $}</div>
+                                        <div class="username">@{$ message.sender.username.trim() $}</div>
+                                    </div>
+                                    <div class="text" ng-bind-html="message.embedded_html"></div>
+
+                                    <div class="meta">
+                                        <span class="meta-time" ng-bind="message.time | date : 'yyyy-MM-dd HH:mm:ss' : 'UTC'"></span>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+
+                </div>
+
+
+            </div>
+        </div>
+
+        <div id="filter-popup"
+             class="ng-cloak" ng-cloak
+             ng-show="filtering.dimension.filtering"
+             ng-controller="SparQs.controllers.FilterController"
+             ng-style="{top:filtering.offset.top}">
+            <div ng-class="'filter-' + filtering.dimension.type">
+                <h3>
+                    Filter on {$ filtering.dimension.name $}
+                    <button type="button" class="close"
+                        ng-click="closeFilter()">
+                        <span>&times;</span>
+                    </button>
+                </h3>
+                <div class="filter-body">
+                    <form ng-submit="saveFilter()">
+                        <div class="description">{$ filtering.dimension.description $}</div>
+                        <div ng-switch="filtering.dimension.type">
+                            <div class="form-group" ng-switch-when="QuantitativeDimension">
+
+                                <quant-histogram
+                                    dimension="filtering.dimension"
+                                    brush-min="filtering.dimension.current_filter().min()"
+                                    brush-max="filtering.dimension.current_filter().max()"
+                                    on-brushed="onQuantitativeBrushed">
+                                </quant-histogram>
+
+                                <input type="text" class="filter-min form-control"
+                                       ng-model="filtering.dimension.current_filter().min"
+                                       ng-model-options="{ getterSetter: true }"
+                                       placeholder="min"/>
+                                <input type="text" class="filter-max form-control"
+                                       ng-model="filtering.dimension.current_filter().max"
+                                       ng-model-options="{ getterSetter: true }"
+                                       placeholder="max"/>
+
+
+                            </div>
+
+                            <div class="form-group" ng-switch-when="TimeDimension">
+
+                                <quant-histogram
+                                    dimension="filtering.dimension"
+                                    brush-min="filtering.dimension.current_filter().min_time()"
+                                    brush-max="filtering.dimension.current_filter().max_time()"
+                                    on-brushed="onQuantitativeBrushed">
+                                </quant-histogram>
+
+                                <input type="text" class="filter-min form-control"
+                                       ng-model="filtering.dimension.current_filter().min_time"
+                                       ng-model-options="{ getterSetter: true }"
+                                       placeholder="min" datetime-format />
+                                <input type="text" class="filter-max form-control"
+                                       ng-model="filtering.dimension.current_filter().max_time"
+                                       ng-model-options="{ getterSetter: true }"
+                                       placeholder="max" datetime-format/>
+
+                            </div>
+
+                            <div class="form-group" ng-switch-when="CategoricalDimension">
+
+                                <div class="level-select-button-group">
+                                    <button type=button class="level-select-button all"
+                                            ng-click="filtering.dimension.switch_mode('exclude')"
+                                            ng-disabled="filtering.dimension.is_all_selected()"
+                                            >Select All</button>
+                                    <button type=button class="level-select-button none"
+                                            ng-click="filtering.dimension.switch_mode('filter')"
+                                            ng-disabled="filtering.dimension.is_all_unselected()"
+                                            >Unselected All</button>
+                                </div>
+                                <hr />
+                                <div class="search" ng-show="filtering.dimension.show_search()">
+                                    Search: <input type="text"
+                                                   ng-enter="search()"
+                                                   ng-blur="set_back_cur_search()"
+                                                   ng-model="filtering.dimension.search_key_tmp" />
+                                    <span class="glyphicon glyphicon-search"
+                                          ng-show="filtering.dimension.search_key_tmp"
+                                          ng-click="search()"   ></span>
+                                    <span class="glyphicon glyphicon-remove"
+                                          ng-show="filtering.dimension.search_key_tmp"
+                                          ng-click="filtering.dimension.reset_search()"   ></span>
+                                </div>
+
+
+                                <div class="dimension-levels" when-scrolled="loadMore()">
+                                    <categorical-histogram
+                                        dimension="filtering.dimension" >
+                                    </categorical-histogram>
+                                </div>
+                                <hr />
+                                <!--
+                                <div class="selected-levels">
+                                    <strong>Filter out levels:</strong> <br />
+                                    <span class=dimension-level-filter
+                                          ng-repeat="d in filtering.dimension.distribution"
+                                          ng-show="!d.show">
+                                        ng-click="filtering.dimension.unfilter_level(d)"
+                                        {$ d.level $}
+                                    </span>
+
+                                </div>
+                                -->
+                            </div>
+
+
+                        </div>
+
+
+                        <div class="form-group form-buttons">
+                            <button type="submit" class="btn btn-sm btn-primary apply-button"
+                                    ng-disabled="!filtering.dimension.is_dirty()"
+                                    ng-click="saveFilter()">Update</button>
+                            <button type="button" class="btn btn-sm btn-default clear-button"
+                                    ng-disabled="filtering.dimension.is_not_applying_filters()"
+                                    ng-click="resetFilter()">Clear</button>
+                        </div>
+
+                    </form>
+
+                    <span us-spinner="spinnerOptions" spinner-key="filter-spinner"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+{% block footer %}
+{% endblock %}

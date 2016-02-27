@@ -1,0 +1,143 @@
+@import 'bower/components-bootstrap/less/mixins';
+
+/* Full page application */
+// http://blog.stevensanderson.com/2011/10/05/full-height-app-layouts-a-css-trick-to-make-it-easier/
+
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    min-width: 1200px;
+}
+body {
+    font-family: 'Open Sans', "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: 400;
+    font-size: 9pt;
+    background-color: rgb(230, 230, 230);
+    min-width: 1200px;
+}
+th:hover{
+    cursor: pointer;
+}
+
+
+#main,#application{
+    height: 100%;
+}
+
+#titleWrap {
+    padding: 10px;
+    background-color: white;
+    -webkit-box-shadow: 0 1px 1px 1px rgba(0,0,0,.1);
+    -moz-box-shadow: 0 1px 1px 1px rgba(0,0,0,.1);
+    box-shadow: 0 1px 1px 1px rgba(0,0,0,.1);
+
+    .title {
+        font-size: 2em;
+        font-weight: 700;
+    }
+
+    .logo{
+        width: 36px;
+        height: 36px;
+        margin: 8px;
+    }
+
+    .description {
+        font-size: 1.6em;
+        margin-left: 10px;
+        margin-right: 20px;
+    }
+
+    .dataset {
+        padding-left: 20px;
+        font-size: 1.6em;
+        position: fixed;
+        top: 15px;
+        right: 10px;
+
+    }
+}
+#content {
+    margin: 10px;
+    height: 90%;
+}
+.wrap {
+    overflow-y: auto;
+    height: 100%;
+}
+.placeholder {
+    color: #999;
+    position: absolute;
+    text-align: center;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.5em;
+}
+.box {
+    margin: 10px 2px;
+    padding: 5px;
+    -webkit-box-shadow: 0 1px 1px 1px rgba(0,0,0,.1);
+    -moz-box-shadow: 0 1px 1px 1px rgba(0,0,0,.1);
+    box-shadow: 0 1px 1px 1px rgba(0,0,0,.1);
+    border-radius: 5px 5px 5px 5px;
+    -moz-border-radius: 5px 5px 5px 5px;
+    -webkit-border-radius: 5px 5px 5px 5px;
+    border: 0px solid #e3e3e3;
+    background-color: white;
+}
+.fix-height{
+    height: 450px;
+}
+.full-height{
+    height: 700px;
+}
+
+.no-padding{
+    padding: 0;
+}
+
+.bar-td {
+    vertical-align: bottom !important;
+}
+
+.tweet-point {
+    margin: 2px;
+    padding: 2px;
+    background-color: rgba(70, 130, 180, 0.2);
+    color: black;
+    display: inline-block;
+    font-size: 5px;
+}
+.tweet-point:hover {
+    cursor: pointer;
+}
+.tweet{
+    font-size: 1.1em;
+}
+
+.tweet-selectable {
+    font-size: 1.1em;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+    span {
+        cursor: pointer;
+    }
+}
+
+.dist-title{
+    text-align: right !important;;
+    vertical-align: bottom !important;
+    font-weight: 600;
+}
+
+.active {
+    background-color: #fee0d2;
+}

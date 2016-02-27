@@ -1,0 +1,378 @@
+@import 'bower/components-bootstrap/less/mixins';
+
+/* Full page application */
+// http://blog.stevensanderson.com/2011/10/05/full-height-app-layouts-a-css-trick-to-make-it-easier/
+
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    min-width: 1200px;
+}
+body {
+    font-family: 'Open Sans', "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: 400;
+    font-size: 9pt;
+    background-color: rgb(230, 230, 230);
+    min-width: 1200px;
+}
+th:hover{
+    cursor: pointer;
+}
+#main,#application{
+    height: 100%;
+}
+
+#titleWrap {
+    padding: 10px;
+    background-color: white;
+    -webkit-box-shadow: 0 1px 1px 1px rgba(0,0,0,.1);
+    -moz-box-shadow: 0 1px 1px 1px rgba(0,0,0,.1);
+    box-shadow: 0 1px 1px 1px rgba(0,0,0,.1);
+
+    .title {
+        font-size: 2em;
+        font-weight: 700;
+    }
+
+    .logo{
+        width: 36px;
+        height: 36px;
+        margin: 8px;
+    }
+
+    .description {
+        font-size: 1.6em;
+        margin-left: 10px;
+        margin-right: 20px;
+    }
+
+    .dataset {
+        padding-left: 20px;
+        font-size: 1.6em;
+        position: fixed;
+        top: 15px;
+        right: 10px;
+
+    }
+}
+#content {
+    margin: 10px;
+    height: ~'calc(100% - 75px)';
+}
+#show-review {
+    position:absolute;
+    top: 45px;
+    left: 30px;
+}
+#left-pane {
+    width:330px;
+    position:absolute;
+    top:65px;
+    bottom:20px;
+}
+#feature-pane {
+    overflow-y: auto;
+}
+#right-pane {
+    position:absolute;
+    padding: 5px;
+    left: 360px;
+    right: 20px;
+    top:60px;
+    bottom: 5px;
+    overflow-y:hidden;
+}
+#review-pane-viz {
+    position:absolute;
+    padding: 5px;
+    left: 360px;
+    width: 500px;
+    top:60px;
+    bottom: 5px;
+    overflow-y:hidden;
+}
+#scatter-box, #confusion-box {
+    height: 300px;
+}
+#review-pane-items {
+    position:absolute;
+    padding: 0 5px 5px 0;
+    left: 860px;
+    right: 20px;
+    overflow-y:hidden;
+    top:65px;
+    bottom:20px;
+}
+#label-pane {
+    height:213px;
+}
+#review-pane {
+    height:~'calc(100% - 233px)';
+    width:~'calc(100% - 330px)';
+    float: left;
+    margin: 0;
+}
+#labels {
+    overflow-y: auto;
+    height: ~'calc(100% - 74px)';
+    margin: 0;
+    margin-bottom: 10px;
+}
+#summary-pane {
+    padding-left: 10px;
+    width: 320px;
+    height:~'calc(100% - 233px)';
+    float: right;
+    margin: 0;
+}
+.full-height {
+    height: 100%;
+}
+.box {
+    margin: 10px 0;
+    padding: 15px;
+    -webkit-box-shadow: 0 1px 1px 1px rgba(0,0,0,.1);
+    -moz-box-shadow: 0 1px 1px 1px rgba(0,0,0,.1);
+    box-shadow: 0 1px 1px 1px rgba(0,0,0,.1);
+    border-radius: 0;
+    -moz-border-radius: 0;
+    -webkit-border-radius: 0;
+    border: 0px solid #e3e3e3;
+    background-color: white;
+}
+.box-header {
+    text-transform: uppercase;
+    font-weight: 700;
+}
+.tweet-main {
+    font-size: 2em;
+    font-weight: 300;
+    margin: 10px 0;
+    height: 68px;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+    span {
+        cursor: pointer;
+    }
+}
+.btn {
+    border-radius: 0;
+}
+.btn-group-code{
+    margin: 10px 0;
+    height: 34px;
+}
+.btn-group-code > .btn {
+    margin-right: 15px;
+    width: 100px;
+}
+.btn-group-code > .btn.active {
+    color: white;
+    font-weight:600;
+}
+
+.no-padding{
+    padding: 0;
+}
+
+.bar-td {
+    vertical-align: bottom !important;
+}
+
+.tweet-point {
+    margin: 2px;
+    padding: 2px;
+    background-color: rgba(70, 130, 180, 0.2);
+    color: black;
+    display: inline-block;
+    font-size: 5px;
+}
+.tweet-point:hover {
+    cursor: pointer;
+}
+.tweet{
+    font-size: 1.1em;
+}
+
+.tweet-selectable {
+    font-size: 1.1em;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+    span {
+        cursor: pointer;
+    }
+}
+
+.dist-title{
+    text-align: right !important;;
+    vertical-align: bottom !important;
+    font-weight: 600;
+}
+
+.active {
+    background-color: #fee0d2;
+}
+
+.feature-sort, .label-filter {
+    margin: 0;
+    margin-top:10px;
+    margin-bottom:5px;
+}
+.feature-sort .feature-sort-label, .label-filter .label-filter-label {
+    width: 80px;
+    heigt: 17px;
+    font-weight:300;
+    display: inline-block;
+}
+.feature-sort .feature-sort-block, .label-filter .label-filter-block{
+    background-color: #777;
+    width: 30px;
+    height: 17px;
+    display: inline-block;
+    font-weight:600;
+    color:white;
+    text-align: center;
+    cursor: pointer;
+    opacity: 0.5;
+}
+
+.feature-sort .feature-sort-block > span {
+    display: none;
+    color: white;
+}
+
+.feature-sort .feature-sort-block > span.rotate {
+    -ms-transform: rotate(180deg); /* IE 9 */
+    -webkit-transform: rotate(180deg); /* Chrome, Safari, Opera */
+    transform: rotate(180deg);
+}
+
+.feature-sort .feature-sort-block:hover {
+    opacity: 0.7;
+}
+.feature-sort .feature-sort-block.selected {
+    opacity: 1;
+    color: white;
+}
+
+.feature-sort .feature-sort-block.selected > span {
+    display: inherit;
+}
+
+.label-filter .label-filter-type {
+    background-color: #777;
+    padding: 0 10px;
+    height: 17px;
+    display: inline-block;
+    font-weight:600;
+    color:white;
+    text-align: center;
+    cursor: pointer;
+    opacity: 0.5;
+}
+.label-filter .label-filter-block:hover, .label-filter .label-filter-type:hover {
+    opacity: 0.7;
+}
+.label-filter .label-filter-block.selected, .label-filter .label-filter-type.selected {
+    opacity: 1;
+}
+
+.feature-item {
+    background-color: #eee;
+    width: 300px;
+    height: 45px;
+    margin: 5px 0;
+}
+
+.feature-item .feature-item-word {
+    width: 146px;
+    padding: 10px;
+    font-size: 1.5em;
+    font-weight:300;
+    height: 45px;
+    display: inline-block;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.feature-item .feature-item-block {
+    width: 30px;
+    padding: 10px;
+    font-size: 1.5em;
+    font-weight: 300;
+    height: 45px;
+    display: inline-block;
+}
+
+.label-item {
+    background-color: #eee;
+    height: 60px;
+    margin: 5px 0;
+}
+
+.label-item .label-item-text {
+    width: ~'calc(100% - 30px)';
+    padding: 10px;
+    font-weight: 300;
+    font-size: 1.2em;
+    height: 60px;
+    display: inline-block;
+}
+
+.label-item .label-item-label {
+    width: 30px;
+    height: 60px;
+    text-align: center;
+    font-size: 1.7em;
+    font-weight: 600;
+}
+.label-item .label-item-label.label-split {
+    width: 30px;
+    height: 30px;
+}
+.noselect {
+  -webkit-touch-callout: none; /* iOS Safari */
+  -webkit-user-select: none;   /* Chrome/Safari/Opera */
+  -khtml-user-select: none;    /* Konqueror */
+  -moz-user-select: none;      /* Firefox */
+  -ms-user-select: none;       /* IE/Edge */
+  user-select: none;           /* non-prefixed version, currently
+                                  not supported by any browser */
+}
+
+#confusion-box text {
+    cursor: pointer;
+    color: #333333;
+    fill: #333333;
+}
+#confusion-box text.selected {
+    color: #fecc5c;
+    fill: #fecc5c;
+}
+#confusion-box text:hover, #confusion-box text.selected:hover {
+    font-weight: 700;
+}
+
+#confusion-box .cell {
+    cursor: pointer;
+    stroke: #333333;
+    stroke-width: 0;
+}
+#confusion-box .cell.selected {
+    stroke: #fecc5c;
+    stroke-width: 1px;
+}
+#confusion-box .cell:hover, #confusion-box .cell.selected:hover {
+    stroke-width: 2px;
+}

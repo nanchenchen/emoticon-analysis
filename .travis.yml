@@ -1,0 +1,42 @@
+language: python
+
+python:
+  - "2.7"
+
+before_install:
+  # These math packages are white-listed, hopefully
+  # https://github.com/travis-ci/apt-package-whitelist/blob/master/ubuntu-precise
+  - sudo apt-get install gfortran liblapack-dev
+  # Use a miniconda environment instead of system python
+  - wget 'http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh' -O miniconda.sh
+  - bash miniconda.sh -b -p $HOME/miniconda -f
+  - export PATH=$HOME/miniconda/bin:$PATH
+  # Clear the bash command cache
+  - hash -r
+  # Some more conda setup
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update conda
+  # For debugging
+  - conda info -a
+
+# command to install dependencies
+install:
+  - conda install python=$TRAVIS_PYTHON_VERSION atlas numpy scipy pip
+  # Global npm packages
+  - travis_retry npm install -g bower
+  # Before we can run fabric
+  - travis_retry pip install -q Fabric path.py
+  # Separated these for debuggability
+  - travis_retry fab pip_install:test
+  - travis_retry fab npm_install
+  - travis_retry fab bower_install
+  - travis_retry fab nltk_init
+  - fab info
+
+# command to run tests
+script:
+  - fab test_coverage
+  - fab docs
+
+after_success:
+  - coveralls

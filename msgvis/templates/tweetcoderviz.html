@@ -1,0 +1,207 @@
+{% extends '_layouts/base.html' %}
+{% load staticfiles djangular_tags %}
+
+{% block page_title %}TweetCoderViz{% endblock %}
+
+{% block meta %}
+<meta name="twitter:widgets:csp" content="on">
+{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'theme.less' %}" type="text/less">
+<link rel="stylesheet" href="{% static 'style.less' %}" type="text/less">
+<link rel="stylesheet" href="{% static 'bower/c3/c3.css' %}">
+<link rel="stylesheet" href="{% static 'tweet_coder_viz.less' %}" type="text/less">
+
+{% endblock %}
+
+{% block js %}
+{{ block.super }}
+
+<script src="{% static 'bower/angular/angular.js' %}"></script>
+<script src="{% static 'bower/angular-cookies/angular-cookies.js' %}"></script>
+<script src="{% static 'bower/angular-route/angular-route.js' %}"></script>
+<script src="{% static 'bower/angular-resource/angular-resource.js' %}"></script>
+<script src="{% static 'bower/angular-animate/angular-animate.js' %}"></script>
+<script src="{% static 'bower/angular-sanitize/angular-sanitize.js' %}"></script>
+<script src="{% static 'bower/angucomplete-alt/angucomplete-alt.js' %}"></script>
+<script src="{% static 'bower/angular-smart-table/dist/smart-table.js' %}"></script>
+
+<script src="{% static 'bower/jquery-ui/ui/core.js' %}"></script>
+<script src="{% static 'bower/jquery-ui/ui/widget.js' %}"></script>
+<script src="{% static 'bower/jquery-ui/ui/mouse.js' %}"></script>
+<script src="{% static 'bower/jquery-ui/ui/draggable.js' %}"></script>
+<script src="{% static 'bower/jquery-ui/ui/droppable.js' %}"></script>
+<script src="{% static 'bower/angular-dragdrop/src/angular-dragdrop.js' %}"></script>
+
+<script src="{% static 'djangular/js/django-angular.js' %}"></script>
+
+<script src="{% static 'bower/spin.js/spin.js' %}"></script>
+<script src="{% static 'bower/angular-spinner/angular-spinner.js' %}"></script>
+    
+<script src="{% static 'bower/moment/moment.js' %}"></script>
+<script src="{% static 'bower/d3/d3.js' %}"></script>
+<script src="{% static 'bower/c3/c3.js' %}"></script>
+
+<script src="{% static 'tweet_coder_viz/app.js' %}"></script>
+<script src="{% static 'tweet_coder_viz/services.js' %}"></script>
+<script src="{% static 'tweet_coder_viz/controllers.js' %}"></script>
+
+
+{% endblock %}
+
+{% block navigation_bar %}
+{% endblock %}
+
+{% block bootstrapping %}
+{{ block.super }}
+<script>
+    angular.module('ng.django.urls')
+        .constant('patterns', {% load_djng_urls %});
+
+    angular.module('TweetCoderViz.bootstrap')
+        .constant('TweetCoderViz.bootstrap.dictionary', {{ object.pk }});
+</script>
+
+{% endblock %}
+
+{% block content %}
+
+<div ng-app="TweetCoderViz" id="application" class="container-fluid"  ng-controller="TweetCoderViz.controllers.DictionaryController">
+        <div id="titleWrap" class="row clearfix"  ng-cloak="">
+
+             <div class="logo-titles">
+                 <span class="title">Tweet Coder</span>
+                 <span class="description">Tweet labeling interface with visualization</span>
+                 <span class="dataset">{$ Dictionary.dataset.description $} ({$ Dictionary.dataset.message_count $} messages)</span>
+             </div>
+
+        </div>
+        <div id="content" class="ng-cloak" ng-cloak  ng-controller="TweetCoderViz.controllers.ViewController" >
+            <div class="no-padding" id="left-pane">
+                <div class="box full-height" id="feature-pane">
+                    <div class="box-header" ng-show="features != null && features.user != null && features.user.length > 0">user features ({$ features.user.length $})</div>
+                    <div class="feature-sort noselect" ng-show="features != null && features.user != null && features.user.length > 0">
+                        <div class="feature-sort-label">sort by:</div>
+                        <div class="feature-sort-block" ng-click="sortFeatures('user', 'word')" ng-class="{ 'selected': featureSortKey['user'] == 'word'}">
+                            w<span class="caret" ng-class="{'rotate': featureSortOption['user'] == 1}"></span></div>
+                        <div class="feature-sort-block" ng-click="sortFeatures('user', 'count')" ng-class="{ 'selected': featureSortKey['user'] == 'count'}">
+                            #<span class="caret" ng-class="{'rotate': featureSortOption['user'] == 1}"></span></div>
+                        <div class="feature-sort-block" ng-repeat="code in codes" ng-style="codeStyle(code.index, null)"
+                            ng-click="sortFeatures('user', code.text)" ng-class="{ 'selected': featureSortKey['user'] == code.text}">
+                            {$ code.index $}<span class="caret"  ng-class="{'rotate': featureSortOption['user'] == 1}"></span></div>
+                    </div>
+                    <div class="feature-item" ng-repeat="feature in features.user">
+                        <div class="feature-item-word">{$ feature.feature $} ({$ feature.count $})</div>
+                        <div class="feature-item-block" ng-repeat="code in codes"
+                             ng-style="codeStyle(code.index, feature.codes[code.text])">{$ code.index $}</div>
+                    </div>
+
+                    <div class="box-header" ng-show="features != null && features.system != null && features.system.length > 0">system features ({$ features.system.length $})</div>
+                    <div class="feature-sort noselect" ng-show="features != null && features.system != null && features.system.length > 0">
+                        <div class="feature-sort-label">sort by:</div>
+                        <div class="feature-sort-block" ng-click="sortFeatures('system', 'word')" ng-class="{ 'selected': featureSortKey['system'] == 'word'}">
+                            w<span class="caret" ng-class="{'rotate': featureSortOption['system'] == 1}"></span></div>
+                        <div class="feature-sort-block" ng-click="sortFeatures('system', 'count')" ng-class="{ 'selected': featureSortKey['system'] == 'count'}">
+                            #<span class="caret" ng-class="{'rotate': featureSortOption['system'] == 1}"></span></div>
+                        <div class="feature-sort-block" ng-repeat="code in codes" ng-style="codeStyle(code.index, null)"
+                            ng-click="sortFeatures('system', code.text)" ng-class="{ 'selected': featureSortKey['system'] == code.text}">
+                            {$ code.index $}<span class="caret"  ng-class="{'rotate': featureSortOption['system'] == 1}"></span></div>
+                    </div>
+                    <div class="feature-item" ng-repeat="feature in features.system" ng-mouseover="onFeatureMouseOver(feature)" ng-mouseleave="onFeatureMouseLeave(feature)">
+                        <div class="feature-item-word">{$ feature.feature $} ({$ feature.count $})</div>
+                        <div class="feature-item-block" ng-repeat="code in codes"
+                             ng-style="codeStyle(code.index, feature.codes[code.text])">{$ code.index $}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="no-padding" id="right-pane" ng-show="showReview.visible == false">
+                <div class="box" id="label-pane">
+                    <span us-spinner="spinnerOptions" spinner-key="label-spinner"></span>
+                    <div class="box-header">new label</div>
+                    <div class="tweet-main">
+                        <span ng-repeat="char in currentMessage.characters track by $index" class="ng-class:'char-'+$index;"
+                           ng-mouseenter="onCharMouseEnter($index)"
+                           ng-mouseleave="onCharMouseLeave($index)"
+                           ng-mousedown="onCharMouseDown($index, $event)"
+                           ng-mouseup="onCharMouseUp($index, $event)"
+                           ng-style="charStyle($index)">{$char$}</span>
+                    </div>
+                    <div class="btn-group-code" data-toggle="buttons">
+                        <label class="btn btn-default" ng-repeat="code in codes"
+                                   ng-click="selectLabel(code.text)"
+                                   ng-class="{'active': code.text == currentLabel}"
+                                   ng-style="buttonStyle(code)">
+                            <input type="radio" ng-attr-id="{$ 'code-' + code.index $}"
+                                   name="code.text" value="code.index"/> {$ code.text $}
+                        </label>
+                    </div>
+                    <div class="form-inline">
+                        <div class="checkbox">
+                            <label><input type="checkbox" ng-model="isCurrentMessageAmbiguous"> ambiguous</label>
+                        </div>
+                        <button class="btn btn-default" ng-disabled="!currentLabel" ng-click="submitLabel()">Submit Code</button>
+                    </div>
+                </div>
+                <div class="box" id="review-pane">
+                    <div class="box-header">submitted labels</div>
+                    <span us-spinner="spinnerOptions" spinner-key="table-spinner"></span>
+                    <div class="label-filter noselect">
+                        <div class="label-filter-label">filter by:</div>
+                        <div class="label-filter-type" ng-click="filterLabels('all')" ng-class="{ 'selected': selectedLabelFilter == 'all'}">all</div>
+                        <div class="label-filter-type" ng-click="filterLabels('gold')" ng-class="{ 'selected': selectedLabelFilter == 'gold'}">gold</div>
+                        <div class="label-filter-type" ng-click="filterLabels('ambiguous')" ng-class="{ 'selected': selectedLabelFilter == 'ambiguous'}">ambiguous</div>
+                        <div class="label-filter-type" ng-click="filterLabels('disagreement')" ng-class="{ 'selected': selectedLabelFilter == 'disagreement'}">disagreement</div>
+                        <div class="label-filter-block" ng-repeat="code in codes" ng-style="codeStyle(code.index, null)"
+                            ng-click="filterLabels(code.index)" ng-class="{ 'selected': selectedLabelFilter == code.index}">{$ code.index $}</div>
+                    </div>
+                    <input placeholder="search for text" class="input-sm form-control" type="search"/>
+                    <div id="labels">
+                        <div ng-repeat="item in filteredLabels" class="label-item">
+                            <div class="label-item-text">{$ item.text $}</div>
+                            <div style="float:right">
+                                <div class="label-item-label label-split" ng-show="item.prediction != null" ng-style="labelStyle(item.prediction)">?</div>
+                                <div class="label-item-label" ng-class="{'label-split': item.prediction != null }" ng-style="labelStyle(item.label)">?</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="box" id="summary-pane">
+                    <div class="box-header">overview</div>
+                    <div tweet-items ng-if="codes" codes="codes" data="submittedLabels" box-color="boxColor"></div>
+                </div>
+            </div>
+            <div class="no-padding" id="review-pane-viz" ng-show="showReview.visible == true">
+                <div class="box" id="scatter-box">
+                    <div class="box-header">overview</div>
+                    <div scatter-box ng-if="codes" codes="codes" data="submittedLabels" box-color="boxColor" feature-callbacks="featureCallbacks"></div>
+                </div>
+                <div class="box" id="confusion-box">
+                    <div class="box-header">confusion</div>
+                    <div confusion-box ng-if="codes" codes="codes" data="submittedLabels" select-cells="selectCells"></div>
+                </div>
+            </div>
+            <div class="no-padding" id="review-pane-items" ng-show="showReview.visible == true">
+                <div class="box" style="height:100%">
+                    <div class="box-header">submitted labels</div>
+                    <span us-spinner="spinnerOptions" spinner-key="table-spinner"></span>
+                    <div id="labels">
+                        <div ng-repeat="item in filteredReviewLabels" class="label-item">
+                            <div class="label-item-text">{$ item.text $}</div>
+                            <div style="float:right">
+                                <div class="label-item-label label-split" ng-show="item.prediction != null" ng-style="labelStyle(item.prediction)">?</div>
+                                <div class="label-item-label" ng-class="{'label-split': item.prediction != null }" ng-style="labelStyle(item.label)">?</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+             <div id="show-review" class="checkbox" style="display: inline-block; margin-left:20px">
+                 <input type="checkbox" name="show-review" ng-model="showReview.visible"> Show Review
+             </div>
+        </div>
+</div>
+
+{% endblock %}
+{% block footer %}
+{% endblock %}

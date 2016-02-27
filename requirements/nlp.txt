@@ -1,0 +1,6 @@
+# topics
+gensim==0.12.2
+nltk
+
+# ml
+scikit-learn
