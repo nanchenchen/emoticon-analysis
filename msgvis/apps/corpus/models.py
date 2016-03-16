@@ -34,18 +34,13 @@ class Dataset(models.Model):
     def __unicode__(self):
         return self.name
 
-    def get_messages_with_golden_code(self):
-        return self.message_set.filter(has_golden_code=True).all()
-
-    def get_messages_without_golden_code(self):
-        return self.message_set.filter(has_golden_code=False).all()
 
 
-class Code(models.Model):
+class Emoticon(models.Model):
     """A code of a message"""
 
     text = base_models.Utf8CharField(max_length=200)
-    """The text of the code"""
+    """The text of the emoticon"""
 
     def __repr__(self):
         return self.text
@@ -53,17 +48,33 @@ class Code(models.Model):
     def __unicode__(self):
         return self.__repr__()
 
-    def get_definition(self, source):
-        if not self.definitions.filter(source=source).exists():
-            return None
+class Participant(models.Model):
+    """A code of a message"""
 
-        definition = self.definitions.get(source=source, valid=True)
-        return {
-            "code": self.text,
-            "source": source,
-            "text": definition.text,
-            "examples": definition.examples.all()
-        }
+    name = models.CharField(max_length=100)
+    """The name of the participant"""
+
+    LANG_CHOICES = (
+        ('No', 'Not specified'),
+        ('En', 'English'),
+        ('Fr', 'French'),
+    )
+    language = models.CharField(max_length=2, choices=LANG_CHOICES, default='No')
+
+    STATUS_CHOICES = (
+        ('No', 'Not specified'),
+        ('Jr', 'Junior'),
+        ('Sr', 'Senior'),
+    )
+    status = models.CharField(max_length=2, choices=STATUS_CHOICES, default='No')
+
+    is_selected = models.BooleanField(default=True)
+
+    def __repr__(self):
+        return self.text
+
+    def __unicode__(self):
+        return self.__repr__()
 
 
 class Message(models.Model):
