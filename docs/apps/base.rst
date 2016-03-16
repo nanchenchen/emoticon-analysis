@@ -4,30 +4,30 @@ Base
 .. contents::
     :local:
 
-.. automodule:: msgvis.apps.base
+.. automodule:: emoticonvis.apps.base
     :members:
 
 Views
 -----
 
-.. automodule:: msgvis.apps.base.views
+.. automodule:: emoticonvis.apps.base.views
     :members:
 
 Context Processors
 ------------------
 
-.. automodule:: msgvis.apps.base.context_processors
+.. automodule:: emoticonvis.apps.base.context_processors
     :members:
 
 Template Tags
 -------------
 
-.. automodule:: msgvis.apps.base.templatetags.active
+.. automodule:: emoticonvis.apps.base.templatetags.active
     :members:
 
 Models
 ------
 
-.. automodule:: msgvis.apps.base.models
+.. automodule:: emoticonvis.apps.base.models
     :members:
 

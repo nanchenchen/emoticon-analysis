@@ -59,7 +59,7 @@ target/
 /.vagrant
 /.env*
 /node_modules
-/msgvis/static/bower
+/emoticonvis/static/bower
 /assets
 *.sqlite
 *.iml
@@ -70,5 +70,5 @@ target/
 *.model
 *.model.state
 
-/msgvis/static/media
+/emoticonvis/static/media
 dataset/*

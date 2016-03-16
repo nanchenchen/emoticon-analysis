@@ -1,7 +1,7 @@
 {
-  "name": "textvisdrg",
+  "name": "emoticon-analysis",
   "version": "0.1.0",
-  "homepage": "https://github.com/hds-lab/textvisdrg",
+  "homepage": "https://github.com/hds-lab/emoticon-analysis",
   "description": "Prototype for exploratory visual data analysis of large social message datasets",
   "license": "MIT",
   "private": true,

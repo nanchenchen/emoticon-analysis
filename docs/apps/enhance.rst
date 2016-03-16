@@ -4,6 +4,6 @@ Enhance
 .. contents::
     :local:
 
-.. automodule:: msgvis.apps.enhance
+.. automodule:: emoticonvis.apps.enhance
     :members:
 

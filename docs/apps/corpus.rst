@@ -4,13 +4,13 @@ Corpus
 .. contents::
     :local:
 
-.. automodule:: msgvis.apps.corpus
+.. automodule:: emoticonvis.apps.corpus
     :members:
 
 
 Models
 ------
 
-.. automodule:: msgvis.apps.corpus.models
+.. automodule:: emoticonvis.apps.corpus.models
     :members:
 

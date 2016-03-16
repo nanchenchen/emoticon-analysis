@@ -4,31 +4,31 @@ Importer
 .. contents::
     :local:
 
-.. automodule:: msgvis.apps.importer
+.. automodule:: emoticonvis.apps.importer
     :members:
 
 Commands
 --------
 
-.. automodule:: msgvis.apps.importer.management.commands.import_corpus
+.. automodule:: emoticonvis.apps.importer.management.commands.import_corpus
     :members:
 
-.. automodule:: msgvis.apps.importer.management.commands.import_twitter_languages
+.. automodule:: emoticonvis.apps.importer.management.commands.import_twitter_languages
     :members:
 
-.. automodule:: msgvis.apps.importer.management.commands.import_twitter_timezones
+.. automodule:: emoticonvis.apps.importer.management.commands.import_twitter_timezones
     :members:
 
 
 Twitter Integration
 -------------------
 
-.. automodule:: msgvis.apps.importer.twitter
+.. automodule:: emoticonvis.apps.importer.twitter
     :members:
 
 Models
 ------
 
-.. automodule:: msgvis.apps.importer.models
+.. automodule:: emoticonvis.apps.importer.models
     :members:
 

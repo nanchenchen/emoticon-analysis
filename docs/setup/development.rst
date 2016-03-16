@@ -45,7 +45,7 @@ you can also configure key-based auth: use ``vagrant ssh-config`` to
 find the private key for accessing the VM.
 
 When you log in, your terminal will automatically drop into a Python
-virtualenv and cd to ``/home/vagrant/textvisdrg``.
+virtualenv and cd to ``/home/vagrant/emoticon-analysis``.
 
 Manual Setup
 ------------
@@ -68,7 +68,7 @@ setup script, as below:
 
 .. code-block:: bash
 
-    $ cd textvisdrg
+    $ cd emoticon-analysis
     $ ./setup/scripts/dev_setup.sh
 
 This script will perform the following steps for you:

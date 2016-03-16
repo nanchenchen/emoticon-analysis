@@ -15,7 +15,7 @@ VENV_NAME=$(basename $PROJECT_ROOT)
 
 DBHOST=localhost
 DBPORT=3306
-DBNAME=textvisdrg
+DBNAME=emoticon-analysis
 DBUSER=dbuser
 DBPASS=dbpass
 DBCHARSET=utf8mb4

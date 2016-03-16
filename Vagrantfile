@@ -26,7 +26,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     # the path on the host to the actual folder. The second argument is
     # the path on the guest to mount the folder. And the optional third
     # argument is a set of non-required options.
-    config.vm.synced_folder ".", "/home/vagrant/textvisdrg"
+    config.vm.synced_folder ".", "/home/vagrant/emoticon-analysis"
 
     # Enable symlinks!
     # http://blog.rudylee.com/2014/10/27/symbolic-links-with-vagrant-windows/
@@ -36,7 +36,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
     config.vm.provision "shell" do |s|
         s.path = "setup/scripts/vagrant_provision.sh"
-        s.args = "/home/vagrant/textvisdrg"
+        s.args = "/home/vagrant/emoticon-analysis"
     end
     
     config.vm.provider "virtualbox" do |v|

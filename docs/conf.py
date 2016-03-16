@@ -35,7 +35,7 @@ PROJECT_ROOT = path(__file__).abspath().realpath().dirname().parent
 sys.path.insert(0, PROJECT_ROOT)
 
 # If that didn't set the settings module...
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "msgvis.settings.prod")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "emoticonvis.settings.prod")
 from django.conf import settings
 settings.configure()
 

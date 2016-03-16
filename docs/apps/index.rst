@@ -13,5 +13,5 @@ Apps
     questions
     api
 
-.. automodule:: msgvis.apps
+.. automodule:: emoticonvis.apps
     :members:

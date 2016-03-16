@@ -4,7 +4,7 @@ API
 .. contents::
     :local:
 
-.. automodule:: msgvis.apps.api
+.. automodule:: emoticonvis.apps.api
     :members:
 
 
@@ -12,12 +12,12 @@ API
 API Objects
 -----------
 
-.. automodule:: msgvis.apps.api.serializers
+.. automodule:: emoticonvis.apps.api.serializers
     :members:
 
 
 API Endpoints
 -------------
 
-.. automodule:: msgvis.apps.api.views
+.. automodule:: emoticonvis.apps.api.views
     :members:

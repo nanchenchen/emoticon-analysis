@@ -116,8 +116,8 @@ else
 
     DATABASE_HOST=$(prompt "Hostname:" "localhost")
     DATABASE_PORT=$(prompt "Port:" "3306")
-    DATABASE_NAME=$(prompt "Database name:" "textvisdrg")
-    DATABASE_USER=$(prompt "User:" "textvisdrg")
+    DATABASE_NAME=$(prompt "Database name:" "emoticon-analysis")
+    DATABASE_USER=$(prompt "User:" "emoticon-analysis")
     DATABASE_PASS=$(prompt "Password:" $DATABASE_USER)
 fi
 
@@ -212,7 +212,7 @@ SECRET_KEY=$(generateRandomString)
 GOOGLE_ANALYTICS_ID=
 SERVER_HOST=0.0.0.0
 PORT=8000
-SETTINGS_MODULE=msgvis.settings.dev
+SETTINGS_MODULE=emoticonvis.settings.dev
 export DATABASE_HOST DATABASE_PORT DATABASE_NAME DATABASE_USER DATABASE_PASS
 export SECRET_KEY GOOGLE_ANALYTICS_ID
 export SERVER_HOST PORT SETTINGS_MODULE
