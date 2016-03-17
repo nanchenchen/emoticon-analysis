@@ -105,11 +105,11 @@ class LanguageSession(models.Model):
 
     participants = models.ManyToManyField(Participant, related_name="lang_sessions")
 
-    num_en = models.IntegerField()
+    num_en = models.IntegerField(default=0)
 
-    num_fr = models.IntegerField()
+    num_fr = models.IntegerField(default=0)
 
-    en_proportion = models.FloatField()
+    en_proportion = models.FloatField(default=0)
 
     TYPE_CHOICES = (
         ('E only', 'E only'),
@@ -118,7 +118,7 @@ class LanguageSession(models.Model):
         ('F only', 'F only'),
         ('Empty', 'Empty')
     )
-    type = models.CharField(max_length=8, choices=TYPE_CHOICES, default=0)
+    type = models.CharField(max_length=8, choices=TYPE_CHOICES, default=None, null=True)
 
 
 class Message(models.Model):

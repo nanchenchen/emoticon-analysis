@@ -51,32 +51,65 @@ class Command(BaseCommand):
 
         if created:
             filename = directory_path + '/data_participants.json'
-            if os.path.isfile(filename):
+            if os.path.exists(filename):
                 importer.run(filename, create_a_participant_from_json)
             else:
                 # newly created dataset has to contain data_participants.json
                 raise CommandError("Filename %s does not exist" % filename)
 
             filename = directory_path + '/data_points.json'
-            if os.path.isfile(filename):
+            if os.path.exists(filename):
                 importer.run(filename, create_a_message_from_json)
             else:
                 # newly created dataset has to contain data_point.json
                 raise CommandError("Filename %s does not exist" % filename)
 
             filename = directory_path + '/emoticons.json'
-            if os.path.isfile(filename):
+            if os.path.exists(filename):
                 importer.run(filename, create_an_emoticon_from_json)
             else:
                 # newly created dataset has to contain emoticons.json
                 raise CommandError("Filename %s does not exist" % filename)
-        
+
+        filename = directory_path + '/lang_sessions.json'
+        if os.path.exists(filename):
+            importer.run(filename, create_a_lang_session_from_json)
+
+        filename = directory_path + '/lang_session_participants.json'
+        if os.path.exists(filename):
+            importer.run(filename, update_a_lang_session_participant_from_json)
+
+        filename = directory_path + '/lang_session_proportion.json'
+        if os.path.exists(filename):
+            importer.run(filename, update_a_lang_session_info_from_json)
+
+        filename = directory_path + '/data_point_language_sessions.json'
+        if os.path.exists(filename):
+            importer.run(filename, update_message_lang_session_from_json)
+
+        filename = directory_path + '/participant_background_full.json'
+        if os.path.exists(filename):
+            importer.run(filename, update_full_participant_background_from_json)
+
+        filename = directory_path + '/participant_background.json'
+        if os.path.exists(filename):
+            importer.run(filename, update_participant_background_from_json)
+
+        filename = directory_path + '/emoticon_valence.json'
+        if os.path.exists(filename):
+            importer.run(filename, update_emoticon_valence_from_json)
+
+        filename = directory_path + '/emoticon_label.json'
+        if os.path.exists(filename):
+            importer.run(filename, update_message_emotions_from_json)
+
+
         print "Time: %.2fs" % (time() - start)
 
 
 class Importer(object):
-    commit_every = 100
-    print_every = 1000
+    commit_every = 10000
+    print_every = 10000
 
     def __init__(self, dataset):
         self.dataset = dataset
@@ -97,9 +130,12 @@ class Importer(object):
                         else:
                             self.not_messages += 1
                     except:
+
                         self.errors += 1
                         print >> sys.stderr, "Import error on line %d" % self.line
                         traceback.print_exc()
+                        import pdb
+                        pdb.set_trace()
 
         #if settings.DEBUG:
             # prevent memory leaks
@@ -107,6 +143,8 @@ class Importer(object):
         #    connection.queries = []
 
     def run(self, filename, import_func):
+        print >> sys.stderr, "Processing %s" %filename
+
         self.line = 0
         self.imported = 0
         self.not_messages = 0

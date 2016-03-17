@@ -13,6 +13,7 @@ lang_map = {
     "French": "Fr"
 }
 
+
 def create_a_participant_from_json(json_str, dataset_obj):
     """
     Given a dataset object, imports a participant from json string into
@@ -22,6 +23,7 @@ def create_a_participant_from_json(json_str, dataset_obj):
     participant = Participant(id=data.id, name=data.name, dataset=dataset_obj)
     participant.save()
     return participant
+
 
 def update_full_participant_background_from_json(json_str, dataset_obj):
     """
@@ -36,6 +38,7 @@ def update_full_participant_background_from_json(json_str, dataset_obj):
     participant.save()
 
     return participant
+
 
 def update_participant_background_from_json(json_str, dataset_obj):
     """
@@ -52,6 +55,7 @@ def update_participant_background_from_json(json_str, dataset_obj):
 
     return participant
 
+
 def create_a_message_from_json(json_str, dataset_obj):
     """
     Given a dataset object, imports a participant from json string into
@@ -66,6 +70,7 @@ def create_a_message_from_json(json_str, dataset_obj):
                       text=data.message)
     message.save()
     return message
+
 
 def create_an_emoticon_from_json(json_str, dataset_obj):
     """
@@ -83,6 +88,7 @@ valence_map = {
     "neutral": "O",
 }
 
+
 def update_emoticon_valence_from_json(json_str, dataset_obj):
     """
     Given a dataset object, imports a participant from json string into
@@ -93,3 +99,70 @@ def update_emoticon_valence_from_json(json_str, dataset_obj):
     emoticon.valence = valence_map[data.valence]
     emoticon.save()
     return emoticon
+
+
+def create_a_lang_session_from_json(json_str, dataset_obj):
+    """
+    Given a dataset object, imports a participant from json string into
+    the dataset.
+    """
+    data = AttributeDict(json.loads(json_str))
+    lang_session = LanguageSession(dataset=dataset_obj, id=data.id,
+                                   start_time=data.st_time, end_time=data.ed_time)
+    lang_session.save()
+
+    return lang_session
+
+
+def update_a_lang_session_participant_from_json(json_str, dataset_obj):
+    """
+    Given a dataset object, imports a participant from json string into
+    the dataset.
+    """
+    data = AttributeDict(json.loads(json_str))
+    lang_session = LanguageSession.objects.get(id=data.lang_session_id)
+    participant = Participant.objects.get(id=data.participant_id)
+    lang_session.participants.add(participant)
+
+    return lang_session
+
+
+def update_a_lang_session_info_from_json(json_str, dataset_obj):
+    """
+    Given a dataset object, imports a participant from json string into
+    the dataset.
+    """
+    data = AttributeDict(json.loads(json_str))
+    lang_session = LanguageSession.objects.get(id=data.lang_session_id)
+    lang_session.num_en = data.en_num
+    lang_session.num_fr = data.fr_num
+    lang_session.en_proportion = data.en_proportion
+    lang_session.type = data["class"]
+    lang_session.save()
+
+    return lang_session
+
+
+def update_message_lang_session_from_json(json_str, dataset_obj):
+    """
+    Given a dataset object, imports a participant from json string into
+    the dataset.
+    """
+    data = AttributeDict(json.loads(json_str))
+    message = Message.objects.get(id=data.point_id)
+    message.lang_session_id = data.lang_session_id
+    message.save()
+
+    return message
+
+
+def update_message_emotions_from_json(json_str, dataset_obj):
+    """
+    Given a dataset object, imports a participant from json string into
+    the dataset.
+    """
+    data = AttributeDict(json.loads(json_str))
+    message = Message.objects.get(id=data.mid)
+    #emoticon = Emoticon.objects.get(id=data.eid)
+    message.emoticons.add(data.eid)
+    return message
