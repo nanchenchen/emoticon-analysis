@@ -40,9 +40,8 @@ test = factories.test_task(default_settings='emoticonvis.settings.test')
 test_coverage = factories.coverage_task(default_settings='emoticonvis.settings.test')
 
 test_data_path = conf.PROJECT_ROOT / 'setup' / 'fixtures' / 'test_data.json'
-make_test_data = factories.make_test_data_task(('base', 'api',  # 'corpus',
-                                                'dimensions', 'datatable',
-                                                'importer', 'enhance', 'questions',
+make_test_data = factories.make_test_data_task(('base', 'api',  'corpus',
+                                                'importer', 'enhance',
                                                 'auth', '--exclude=auth.Permission'),
                                                test_data_path)
 load_test_data = factories.load_test_data_task(test_data_path)

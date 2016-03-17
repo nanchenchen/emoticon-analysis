@@ -57,7 +57,7 @@ class Command(BaseCommand):
                 # newly created dataset has to contain data_participants.json
                 raise CommandError("Filename %s does not exist" % filename)
 
-            filename = directory_path + '/data_point.json'
+            filename = directory_path + '/data_points.json'
             if os.path.isfile(filename):
                 importer.run(filename, create_a_message_from_json)
             else:

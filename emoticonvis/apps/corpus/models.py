@@ -58,6 +58,8 @@ class Emoticon(models.Model):
 
 class Participant(models.Model):
     """A code of a message"""
+    dataset = models.ForeignKey(Dataset, default=1)
+    """Which :class:`Dataset` the message belongs to"""
 
     name = models.CharField(max_length=100, blank=True)
     """The name of the participant"""
@@ -85,6 +87,38 @@ class Participant(models.Model):
 
     def __unicode__(self):
         return self.__repr__()
+
+
+class LanguageSession(models.Model):
+    """
+    A language session is a continuous time period when participants in the session stay the same
+    """
+
+    dataset = models.ForeignKey(Dataset)
+    """Which :class:`Dataset` the message belongs to"""
+
+    start_time = models.DateTimeField(null=True, blank=True, default=None)
+    """The :py:class:`datetime.datetime` (in UTC) when the language session starts"""
+
+    end_time = models.DateTimeField(null=True, blank=True, default=None)
+    """The :py:class:`datetime.datetime` (in UTC) when the language session ends"""
+
+    participants = models.ManyToManyField(Participant, related_name="lang_sessions")
+
+    num_en = models.IntegerField()
+
+    num_fr = models.IntegerField()
+
+    en_proportion = models.FloatField()
+
+    TYPE_CHOICES = (
+        ('E only', 'E only'),
+        ('major E', 'major E'),
+        ('major F', 'major F'),
+        ('F only', 'F only'),
+        ('Empty', 'Empty')
+    )
+    type = models.CharField(max_length=8, choices=TYPE_CHOICES, default=0)
 
 
 class Message(models.Model):
@@ -120,9 +154,12 @@ class Message(models.Model):
 
     emoticons = models.ManyToManyField(Emoticon, related_name="messages")
 
+    lang_session = models.ForeignKey(LanguageSession, related_name="messages", default=None, null=True)
+
 
     def __repr__(self):
         return self.text
 
     def __unicode__(self):
         return self.__repr__()
+
