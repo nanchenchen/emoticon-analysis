@@ -1,18 +1,18 @@
+from sys import stderr
+import numpy as np
+
 from django.core.management.base import BaseCommand, make_option, CommandError
-from time import time
-import path
-from django.db import transaction
-import csv
-import codecs
-from operator import itemgetter
 
 import logging
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+from emoticonvis.apps.corpus.models import Dataset
+from emoticonvis.apps.enhance.models import get_message_connections, get_word_count_list
+
 class Command(BaseCommand):
     help = "Live."
-    args = '<dictionary_id>'
+    args = '<dataset_id>'
     option_list = BaseCommand.option_list + (
     #    make_option('-a', '--action',
     #                default='all',
@@ -22,86 +22,62 @@ class Command(BaseCommand):
 
     )
 
-    def handle(self, dictionary_id, **options):
+    def handle(self, dataset_id, **options):
 
-        if not dictionary_id:
+        if not dataset_id:
             raise CommandError("Dataset id is required.")
         try:
-            dictionary_id = int(dictionary_id)
+            dataset_id = int(dataset_id)
         except ValueError:
             raise CommandError("Dataset id must be a number.")
 
-        action = options.get('action')
+        dataset = Dataset.objects.get(id=dataset_id)
 
-        from emoticonvis.apps.enhance.models import Dictionary
-        dictionary = Dictionary.objects.get(id=dictionary_id)
-        data = dictionary.load_to_scikit_learn_format(training_portion=0.50, use_tfidf=False)
+        message_connections = get_message_connections(dataset_id, has_emoticon=True, selected_participant_only=True).all()
+        words = get_word_count_list(message_connections, top_num=500)
+        emoticons = dataset.get_emoticons_from_selected_participants().all()
 
-        from sklearn.multiclass import OneVsOneClassifier
-        from sklearn.svm import LinearSVC
-        OneVsOneClassifier(LinearSVC(random_state=0)).fit(data['training']['X'], data['training']['y'])
+        word_map = {}
+        emoticon_map = {}
 
-        from sklearn import svm
-        clf = svm.SVC()
-        clf.fit(data['training']['X'], data['training']['y'])
-        lin_clf = svm.LinearSVC()
-        lin_clf.fit(data['training']['X'], data['training']['y'])
+        for idx, word in enumerate(words):
+            word = word['tweet_word__text']
+            word_map[word] = idx
 
-        #import json
-        #with open('../datasets/feature_weight.json', 'w') as fp:
-        #    print >> fp, json.dumps(lin_clf.coef_.tolist())
+        for idx, emoticon in enumerate(emoticons):
+            emoticon_map[emoticon.text] = idx
 
-        print "Training"
-        print "=========="
-        print "Distribution:"
-        for code in data['meta']['codes']:
-            print "%s: %d" % (code['text'], len(data['training']['group_by_codes'][code['index']]))
-        print "Accuracy: %f" %lin_clf.score(data['training']['X'], data['training']['y'])
+        count_vectors = np.zeros((emoticons.count(), len(words)))
 
-        print ""
-
-        print "Testing"
-        print "=========="
-        print "Distribution:"
-        for code in data['meta']['codes']:
-            print "%s: %d" % (code['text'], len(data['testing']['group_by_codes'][code['index']]))
-        print "Accuracy: %f" %lin_clf.score(data['testing']['X'], data['testing']['y'])
-
-        summary = []
-        header = ["word_index", "word", "count"]
-        for code in data['meta']['codes']:
-            header.append(code['text'] + '_weight')
-            header.append(code['text'] + '_mean')
-            header.append(code['text'] + '_var')
-            header.append(code['text'] + '_order')
-        header.append('#in_top_features')
-        summary.append(header)
-
-        import numpy
-        order = numpy.zeros(lin_clf.coef_.shape)
-        for code in data['meta']['codes']:
-            cl = sorted(map(lambda x: x, enumerate(lin_clf.coef_[code['index']])), key=itemgetter(1), reverse=True)
-            for idx, item in enumerate(cl):
-                order[code['index']][item[0]] = idx
+        # for idx, emoticon in enumerate(emoticons):
+        #     for msg in emoticon.messages.all().prefetch_related('tweetword_connections'):
+        #         for twc in msg.tweetword_connections.all():
+        #             word_idx = word_map.get(twc.tweet_word.text)
+        #             if word_idx:
+        #                 count_vectors[idx, word_idx] += 1
+        message_connections = message_connections.select_related('message', 'tweet_word').prefetch_related('message__emoticons')
+        total_count = message_connections.count()
+        for idx, msg_con in enumerate(message_connections):
+            if idx % 1000 == 0:
+                print >>stderr, "Finished %d/%d" %(idx, total_count)
+            word_idx = word_map.get(msg_con.tweet_word.text)
+            if word_idx:
+                for emoticon in msg_con.message.emoticons.all():
+                    emoticon_idx = emoticon_map.get(emoticon.text)
+                    count_vectors[emoticon_idx, word_idx] += 1
 
 
-        for word in data['meta']['features']:
-            row = [word['index'], word['text'], word['count']]
-            in_top_features = 0
-            for code in data['meta']['codes']:
-                row.append(lin_clf.coef_[code['index']][word['index']]) # weight
-                row.append(data['training']['mean'][code['index']][word['index']]) # mean
-                row.append(data['training']['var'][code['index']][word['index']]) # var
-                row.append(order[code['index']][word['index']]) # order
-                in_top_features += 1 if order[code['index']][word['index']] < 10 else 0
-            row.append(in_top_features)
-            summary.append(row)
-
-        with codecs.open('../datasets/summary_dict_%s.csv' %(dictionary_id), encoding='utf-8', mode='w') as csvfile:
-            csvwriter = csv.writer(csvfile, delimiter=',',
-                            quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            for row in summary:
-                csvwriter.writerow(row)
+        # import pdb
+        # pdb.set_trace()
+        #
+        # import csv
+        # with open('../datasets/emoticon-words.csv', 'wb') as csvfile:
+        #     csvwriter = csv.writer(csvfile, delimiter=',',
+        #                     quotechar='"', quoting=csv.QUOTE_ALL)
+        #     csvwriter.writerow([word['tweet_word__text'] for word in words])
+        #     output_ary = count_vectors.tolist()
+        #     for idx, ary in enumerate(output_ary):
+        #         csvwriter.writerow([emoticons[idx].text] + ary)
 
         import pdb
         pdb.set_trace()

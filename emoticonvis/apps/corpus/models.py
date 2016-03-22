@@ -1,6 +1,7 @@
 import operator
 from django.db import models
 from django.db.models import Q
+from django.db.models import Count
 from caching.base import CachingManager, CachingMixin
 
 from emoticonvis.apps.base import models as base_models
@@ -34,6 +35,11 @@ class Dataset(models.Model):
     def __unicode__(self):
         return self.name
 
+    def get_messages_from_selected_participants(self):
+        return self.messages.filter(participant__is_selected=True).distinct()
+
+    def get_emoticons_from_selected_participants(self):
+        return Emoticon.objects.filter(messages__participant__is_selected=True).distinct()
 
 class Emoticon(models.Model):
     """A code of a message"""
@@ -54,6 +60,7 @@ class Emoticon(models.Model):
 
     def __unicode__(self):
         return self.__repr__()
+
 
 
 class Participant(models.Model):

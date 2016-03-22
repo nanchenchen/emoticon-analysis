@@ -315,6 +315,7 @@ class Dictionary(models.Model):
             found &= (p.search(clean_message) is not None)
         return found
 
+
 class Feature(models.Model):
     dictionary = models.ForeignKey(Dictionary, related_name='features')
     index = models.IntegerField()
@@ -354,7 +355,6 @@ class Feature(models.Model):
                 "distribution": distribution}
 
 
-
 class MessageFeature(models.Model):
     class Meta:
         index_together = (
@@ -378,7 +378,6 @@ class MessageFeature(models.Model):
             return"%d:%f" %(int(self.feature_id), float(self.tfidf))
         else:
             return"%d:%f" %(int(self.feature_id), float(self.count))
-
 
 
 class TweetWord(models.Model):
@@ -413,4 +412,37 @@ class TweetWordMessageConnection(models.Model):
         ordering = ["message", "order", ]
         unique_together = ('message', 'tweet_word', 'order', )
 
+
+def get_message_connections(dataset_id=1, has_emoticon=True, selected_participant_only=True):
+    tweet_words = TweetWordMessageConnection.objects.filter(message__dataset_id=dataset_id)
+    if has_emoticon:
+        tweet_words = tweet_words.exclude(message__emoticons=None)
+    if selected_participant_only:
+        tweet_words = tweet_words.filter(message__participant__is_selected=True)
+    return tweet_words.select_related('tweet_word').distinct()
+
+
+def get_word_count_list(message_connections, top_num=500):
+
+    tweet_words = message_connections.values('tweet_word__text', 'tweet_word__pos').annotate(count=Count('id')).order_by('-count')
+
+    from nltk.corpus import stopwords
+    _stoplist = stopwords.words('english')
+    _stoplist += ['ive', 'wasnt', 'didnt', 'dont', 'joined', 'don\'t', 'didn\'t',
+                  'wa', 'doesn\'t', 'doesnt', 'wasnt', 'hasn\'t', 'haven\'t', 'can\'t', 'won\'t',
+                  'wouldn\'t', 'isn\'t', 'aren\'t']
+
+    _poslist = ['V', 'N', 'A']
+
+    words = []
+    count = 0
+
+    for item in tweet_words:
+        if item["tweet_word__text"] not in _stoplist and item["tweet_word__pos"] in _poslist:
+            words.append(item)
+            count += 1
+        if count >= top_num:
+            break
+
+    return words
 
