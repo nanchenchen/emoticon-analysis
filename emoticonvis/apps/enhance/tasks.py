@@ -1,17 +1,17 @@
 import logging
 
-
-from models import Dictionary, Feature, MessageFeature, TweetWord, TweetWordMessageConnection
-from emoticonvis.apps.corpus.models import Dataset, Message
 import codecs
 import re
 from time import time
 import subprocess
-import os
 import glob
+
+from bulk_update.helper import bulk_update
 from nltk.stem import WordNetLemmatizer
-from gensim.models import Phrases
-import sys
+from langdetect import detect
+
+from models import Dictionary, Feature, MessageFeature, TweetWord, TweetWordMessageConnection
+from emoticonvis.apps.corpus.models import Dataset, Message
 
 logger = logging.getLogger(__name__)
 
@@ -452,3 +452,40 @@ def lemmatize_tweets(input_path, output_path):
                             print >>out2, "%s\t%s\t%s" %(word, pos, lemma)
 
                 print >>out, "</doc>"
+
+
+def detect_language(dataset_id):
+
+    dataset = Dataset.objects.get(id=dataset_id)
+    total_count = dataset.message_set.count()
+    messages = dataset.message_set.exclude(time__isnull=True)
+    messages = messages.exclude(participant__id=2)
+    messages = messages.filter(type=0)
+
+    start = 0
+    limit = 10000
+
+    while start < total_count:
+
+        current_batch = messages[start:start + limit]
+        for msg in current_batch:
+
+            try:
+                #full_name = msg.sender.full_name.lower() if msg.sender.full_name is not None else ""
+                #username = msg.sender.username.lower() if msg.sender.username is not None else ""
+                text = msg.text
+                detected_lang = detect(text)
+                print "[%s] %s" %(detected_lang, text[:20])
+                if detected_lang == 'en':
+                    msg.detected_language = 'En'
+                elif detected_lang == 'fr':
+                    msg.detected_language = 'Fr'
+
+            except:
+                import traceback
+                traceback.print_exc()
+                import pdb
+                pdb.set_trace()
+
+        bulk_update(current_batch)
+        start += limit

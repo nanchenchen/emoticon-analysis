@@ -4,3 +4,6 @@ nltk
 
 # ml
 scikit-learn
+
+# language
+langdetect

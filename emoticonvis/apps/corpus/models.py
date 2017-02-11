@@ -163,6 +163,13 @@ class Message(models.Model):
 
     lang_session = models.ForeignKey(LanguageSession, related_name="messages", default=None, null=True)
 
+    LANG_CHOICES = (
+        ('No', 'Not specified'),
+        ('En', 'English'),
+        ('Fr', 'French'),
+    )
+    detected_language = models.CharField(max_length=2, choices=LANG_CHOICES, default='No')
+
 
     def __repr__(self):
         return self.text
