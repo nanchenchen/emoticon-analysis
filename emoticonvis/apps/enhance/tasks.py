@@ -361,10 +361,12 @@ def import_from_tweet_parser_results(dataset_id, filename):
         print "Time: %.2fs" % (time() - start)
 
 
-def dump_tweets(dataset_id, save_path):
+def dump_tweets(dataset_id, save_path, mode='twitter_parser'):
     dataset = Dataset.objects.get(id=dataset_id)
-    total_count = dataset.message_set.count()
-    messages = dataset.message_set.all()#.exclude(time__isnull=True)
+    #messages = dataset.message_set.all()#.exclude(time__isnull=True)
+    messages = dataset.message_set.exclude(participant__id=2)
+    messages = messages.filter(type=0)
+    total_count = messages.count()
 
     start = 0
     limit = 10000
@@ -378,19 +380,23 @@ def dump_tweets(dataset_id, save_path):
                     tweet_id = msg.id
                     #full_name = msg.sender.full_name.lower() if msg.sender.full_name is not None else ""
                     #username = msg.sender.username.lower() if msg.sender.username is not None else ""
-                    text = msg.text.lower()
+                    if mode == 'twitter_parser':
+                        text = msg.text.lower()
 
-                    line = "TWEETID%dSTART\n" %(tweet_id)
-                    f.write(line)
+                        line = "TWEETID%dSTART\n" %(tweet_id)
+                        f.write(line)
 
-                    #line = "%s @%s" %(full_name, username)
-                    #f.write(line)
+                        #line = "%s @%s" %(full_name, username)
+                        #f.write(line)
 
-                    line = "%s\n" %(text)
-                    f.write(line)
+                        line = "%s\n" %(text)
+                        f.write(line)
 
-                    line = "TWEETID%dEND\n" %(tweet_id)
-                    f.write(line)
+                        line = "TWEETID%dEND\n" %(tweet_id)
+                        f.write(line)
+                    elif mode == 'lang_detection':
+                        line = "%d\t%s\n" %(tweet_id, msg.text)
+                        f.write(line)
 
                 except:
                     pass
@@ -454,7 +460,26 @@ def lemmatize_tweets(input_path, output_path):
                 print >>out, "</doc>"
 
 
-def detect_language(dataset_id):
+def run_lang_detection(ldig_path, input_path, output_path):
+    ldi_cmd = "python %s/ldig.py" %ldig_path
+    model_path = "%s/models/model.latin" %ldig_path
+    input_files = glob.glob("%s/dataset_*.txt" % input_path)
+
+    for input_file in input_files:
+        results = re.search('(dataset_.+)\.txt', input_file)
+        filename = results.groups()[0]
+
+        output_file = "%s/%s.out" % (output_path, filename)
+
+        with codecs.open(output_file, encoding='utf-8', mode='w') as f:
+            cmd = "%s -m %s %s" %(ldi_cmd, model_path, input_file)
+            print cmd
+            try:
+                subprocess.call(cmd.split(" "), stdout=f, stderr=subprocess.PIPE)
+            except:
+                pass
+
+def ori_detect_language(dataset_id):
 
     dataset = Dataset.objects.get(id=dataset_id)
     total_count = dataset.message_set.count()
