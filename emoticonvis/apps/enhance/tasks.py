@@ -5,6 +5,10 @@ import re
 from time import time
 import subprocess
 import glob
+import codecs
+import sys
+UTF8Writer = codecs.getwriter('utf8')
+sys.stdout = UTF8Writer(sys.stdout)
 
 from bulk_update.helper import bulk_update
 from nltk.stem import WordNetLemmatizer
@@ -479,38 +483,128 @@ def run_lang_detection(ldig_path, input_path, output_path):
             except:
                 pass
 
-def ori_detect_language(dataset_id):
 
-    dataset = Dataset.objects.get(id=dataset_id)
-    total_count = dataset.message_set.count()
-    messages = dataset.message_set.exclude(time__isnull=True)
-    messages = messages.exclude(participant__id=2)
-    messages = messages.filter(type=0)
+# help function for reading language detection results
+def read_lang_detection_results(input_file):
+    print "Read %s" %input_file
+    results = []
+    with codecs.open(input_file, encoding='utf-8', mode='r') as f:
+        for line in f:
+            if line.strip() == '':
+                continue
+            else:
+                tokens = line.split('\t')
+                results.append({
+                    'id': int(tokens[2]),
+                    'lang': tokens[1],
+                    'text': tokens[3],
+                    'source': input_file
+                })
+    return results
 
-    start = 0
-    limit = 10000
 
-    while start < total_count:
+def save_smoothed_results(messages, target_input_file, output_path, start_idx, end_idx):
+    results = re.search('(dataset_.+)\.out', target_input_file)
+    filename = results.groups()[0]
 
-        current_batch = messages[start:start + limit]
-        for msg in current_batch:
+    output_file = "%s/%s.out" % (output_path, filename)
 
+    with codecs.open(output_file, encoding='utf-8', mode='w') as f:
+
+        for idx, message in enumerate(messages[start_idx:end_idx]):
+            # if message['source'] != target_input_file:
+            #     if idx > 0 and messages[idx - 1]['source'] == target_input_file:
+            #         next_start_num = idx
+            #         break
+            # else:
             try:
-                #full_name = msg.sender.full_name.lower() if msg.sender.full_name is not None else ""
-                #username = msg.sender.username.lower() if msg.sender.username is not None else ""
-                text = msg.text
-                detected_lang = detect(text)
-                print "[%s] %s" %(detected_lang, text[:20])
-                if detected_lang == 'en':
-                    msg.detected_language = 'En'
-                elif detected_lang == 'fr':
-                    msg.detected_language = 'Fr'
-
+                line = "\t%s\t%d\t%s\n" %(message['lang'], message['id'], message['text'])
+                f.write(line)
             except:
                 import traceback
                 traceback.print_exc()
                 import pdb
                 pdb.set_trace()
 
-        bulk_update(current_batch)
-        start += limit
+    return True
+
+
+def run_non_en_fr_lang_smoothing(original_output_path, smoothed_output_path):
+
+    window_size = 5  # how many messages to examine before and after
+
+    input_files = glob.glob("%s/dataset_*.out" % original_output_path)
+    total_num_files = len(input_files)
+
+    messages = []
+    current_start = 0
+    current_file_idx = 0
+    messages_from_current_file = read_lang_detection_results(input_files[current_file_idx])
+    current_end = len(messages_from_current_file)
+    num_messages = current_end
+    messages.extend(messages_from_current_file)
+    next_file_idx = 1
+
+    idx = 0
+
+    while idx < num_messages:
+        message = messages[idx]
+
+        if idx + window_size >= num_messages and next_file_idx < total_num_files:
+            messages_from_current_file = read_lang_detection_results(input_files[next_file_idx])
+            next_file_idx += 1
+            messages.extend(messages_from_current_file)
+            num_messages += len(messages_from_current_file)
+
+        if message['lang'] != 'en' and message['lang'] != 'fr':
+            print "===[%d] %d\t%s\t%s" % (idx, message['id'], message['lang'], message['text'])
+            en_count = 0
+            fr_count = 0
+            prev_collected = 0
+            next_collected = 0
+
+            prev_idx = idx - 1
+            next_idx = idx + 1
+
+            while prev_idx >= 0 and prev_collected < window_size:
+                print "[p] %d\t%s\t%s" %(prev_idx, messages[prev_idx]['lang'], messages[prev_idx]['text'])
+                if messages[prev_idx]['lang'] == 'en':
+                    en_count += 1
+                    prev_collected += 1
+                elif messages[prev_idx]['lang'] == 'fr':
+                    fr_count += 1
+                    prev_collected += 1
+                prev_idx -= 1
+
+            while next_idx < current_end and next_collected < window_size:
+                print "[n] %d\t%s\t%s" %(next_idx, messages[next_idx]['lang'], messages[next_idx]['text'])
+                if messages[next_idx]['lang'] == 'en':
+                    en_count += 1
+                    next_collected += 1
+                elif messages[next_idx]['lang'] == 'fr':
+                    fr_count += 1
+                    next_collected += 1
+                next_idx += 1
+
+            if en_count >= fr_count:
+                message['lang'] = 'en'
+            else:
+                message['lang'] = 'fr'
+
+            print "Final decision: %s" % message['lang']
+
+        idx += 1
+
+        if idx == current_end:
+
+            save_smoothed_results(messages, input_files[current_file_idx],
+                                  smoothed_output_path, current_start, current_end)
+
+            messages = messages[(current_end - window_size):]
+            current_start = window_size
+            current_end = num_messages - current_end + window_size
+            num_messages = current_end
+            current_file_idx += 1
+            idx = window_size
+
+

@@ -48,3 +48,12 @@ class Command(BaseCommand):
 
             print "Detect message languages..."
             run_lang_detection(ldig_path, save_path, output_path)
+
+        if action == 'all' or action == 'smoothing_non_en_fr':
+            from emoticonvis.apps.enhance.tasks import run_non_en_fr_lang_smoothing
+            original_output_path = "%s/lang_detection_results" %save_path
+            smoothed_output_path = "%s/En_Fr_only_results" %save_path
+            check_or_create_dir(smoothed_output_path)
+
+            print "Smooth out non-English and non-French languages..."
+            run_non_en_fr_lang_smoothing(original_output_path, smoothed_output_path)
