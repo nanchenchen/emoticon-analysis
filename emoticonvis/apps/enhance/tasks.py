@@ -342,7 +342,6 @@ def import_from_tweet_parser_results(dataset_id, filename):
                 #print "current msg id = %d" %(current_msg_id)
                 current_msg = Message.objects.get(id=current_msg_id)
 
-
             elif re.search("(.+)\t(.+)\t(.+)", line):
                 results = re.match('(.+)\t(.+)\t(.+)', line)
                 groups = results.groups()
@@ -486,7 +485,7 @@ def run_lang_detection(ldig_path, input_path, output_path):
 
 # help function for reading language detection results
 def read_lang_detection_results(input_file):
-    print "Read %s" %input_file
+    print "Read %s" % input_file
     results = []
     with codecs.open(input_file, encoding='utf-8', mode='r') as f:
         for line in f:
@@ -608,3 +607,19 @@ def run_non_en_fr_lang_smoothing(original_output_path, smoothed_output_path):
             idx = window_size
 
 
+def import_from_lang_detection_results(dataset_id, detection_results_filename):
+
+    dataset = Dataset.objects.get(id=dataset_id)
+    #messages = dataset.message_set.all()#.exclude(time__isnull=True)
+    messages = dataset.message_set.exclude(participant__id=2)
+    messages = messages.filter(type=0)
+
+    messages_with_lang = read_lang_detection_results(detection_results_filename)
+    current_bulk = []
+
+    for msg in messages_with_lang:
+        msg_obj = messages.get(id=msg['id'])
+        msg_obj.detected_language = msg['lang'].title()
+        current_bulk.append(msg_obj)
+
+    bulk_update(current_bulk)
