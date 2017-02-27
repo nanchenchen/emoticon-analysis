@@ -1,21 +1,25 @@
 import logging
 
+import calendar
 import codecs
-import re
-from time import time
-import subprocess
 import glob
-import codecs
+import math
+import re
+import subprocess
 import sys
+from time import time
+
 UTF8Writer = codecs.getwriter('utf8')
 sys.stdout = UTF8Writer(sys.stdout)
 
 from bulk_update.helper import bulk_update
 from nltk.stem import WordNetLemmatizer
-from langdetect import detect
+
+from django.db.models import Count
 
 from models import Dictionary, Feature, MessageFeature, TweetWord, TweetWordMessageConnection
 from emoticonvis.apps.corpus.models import Dataset, Message
+
 
 logger = logging.getLogger(__name__)
 
@@ -623,3 +627,59 @@ def import_from_lang_detection_results(dataset_id, detection_results_filename):
         current_bulk.append(msg_obj)
 
     bulk_update(current_bulk)
+
+
+def calculate_entropy(entry_list, field_name):
+
+    entry_values = map(lambda x: float(x[field_name]), entry_list)
+    total_sum = sum(entry_values)
+    normalized_list = map(lambda x: x / total_sum, entry_values)
+
+    H = 0
+    for p in normalized_list:
+        H += -p * math.log(p, 2)
+
+    return H
+
+
+def calculate_word_entropy(dataset_id, lang_group=None):
+
+    dataset = Dataset.objects.get(id=dataset_id)
+    messages = dataset.message_set.filter(participant__is_selected=True)
+    messages = messages.filter(type=0)
+    group_by_month = messages.extra(select={'year': "EXTRACT(year FROM time)",
+                                            'month': "EXTRACT(month FROM time)"})\
+                             .values('year','month')\
+                             .annotate(count_items=Count('id'))
+
+
+    dataset_tweet_words = TweetWordMessageConnection.objects.select_related()
+    dataset_tweet_words = dataset_tweet_words.filter(message__dataset_id=dataset_id,
+                                                     message__detected_language='En',
+                                                     message__participant__is_selected=True)
+    dataset_tweet_words = dataset_tweet_words.exclude(tweet_word__pos='$')
+    dataset_tweet_words = dataset_tweet_words.exclude(tweet_word__pos=',')
+
+    if lang_group:
+        dataset_tweet_words = dataset_tweet_words.filter(message__participant__language=lang_group)
+
+    results = []
+
+    for monthly_group in group_by_month:
+
+        y = monthly_group['year']
+        m = monthly_group['month']
+        month_last_day = calendar.monthrange(y, m)[1]
+        date_range = ['%04d-%02d-%02d 00:00:00Z' %(y, m, 1), '%04d-%02d-%02d 23:59:59Z' %(y, m, month_last_day)]
+
+        monthly_words = dataset_tweet_words.filter(message__time__range=date_range)
+        group_by_tweet_word = monthly_words.values('tweet_word__pos', 'tweet_word__text')\
+                                           .annotate(count_items=Count('id'))
+
+        H = calculate_entropy(group_by_tweet_word, 'count_items')
+        logger.info('%04d-%02d\t%.4f' %(y, m, H))
+        results.append(('%04d-%02d' %(y, m), H))
+
+    return results
+
+

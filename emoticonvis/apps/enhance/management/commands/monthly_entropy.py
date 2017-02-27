@@ -1,7 +1,5 @@
-from sys import stderr
-import numpy as np
+import csv
 
-from django.db.models import Count
 from django.core.management.base import BaseCommand, make_option, CommandError
 
 import logging
@@ -9,11 +7,11 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 logger = logging.getLogger(__name__)
 
 from emoticonvis.apps.corpus.models import Dataset
-from emoticonvis.apps.enhance.models import TweetWord
+from emoticonvis.apps.enhance.tasks import calculate_word_entropy
 
 class Command(BaseCommand):
     help = "Calculate monthly entropy."
-    args = '<dataset_id>'
+    args = '<dataset_id> <output_file>'
     option_list = BaseCommand.option_list + (
     #    make_option('-a', '--action',
     #                default='all',
@@ -23,7 +21,7 @@ class Command(BaseCommand):
 
     )
 
-    def handle(self, dataset_id, **options):
+    def handle(self, dataset_id, output_file, **options):
 
         if not dataset_id:
             raise CommandError("Dataset id is required.")
@@ -32,17 +30,36 @@ class Command(BaseCommand):
         except ValueError:
             raise CommandError("Dataset id must be a number.")
 
-        dataset = Dataset.objects.get(id=dataset_id)
+        if not output_file:
+            raise CommandError("Output filename is required.")
 
-        messages = dataset.message_set.filter(participant__is_selected=True)
-        messages = messages.filter(type=0)
-        group_by_month = messages.extra(select={'year': "EXTRACT(year FROM time)",
-                                                'month': "EXTRACT(month FROM time)"})\
-                                 .values('year','month')\
-                                 .annotate(count_items=Count('id'))
-        total_count = messages.count()
+        final_results = {}
+
+        all_entropy = calculate_word_entropy(dataset_id)
+        for (month, H) in all_entropy:
+            if month not in final_results:
+                final_results[month] = {'month': month}
+            final_results[month]['all'] = H
 
 
+        en_entropy = calculate_word_entropy(dataset_id, lang_group='En')
+        for (month, H) in en_entropy:
+            if month not in final_results:
+                final_results[month] = {'month': month}
+            final_results[month]['English'] = H
 
-        import pdb
-        pdb.set_trace()
+        fr_entropy = calculate_word_entropy(dataset_id, lang_group='Fr')
+        for (month, H) in fr_entropy:
+            if month not in final_results:
+                final_results[month] = {'month': month}
+            final_results[month]['French'] = H
+
+        print final_results
+
+        with open(output_file, 'w') as fp:
+            dw = csv.DictWriter(fp, delimiter=',', lineterminator='\n',
+                                fieldnames=['month', 'all', 'English', 'French'])
+            dw.writeheader()
+            for month in final_results:
+                dw.writerow(final_results[month])
+
